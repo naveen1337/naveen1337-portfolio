@@ -1,0 +1,347 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import ArticleItem from '../components/ArticleItem.astro';
+import { Icon } from 'astro-icon/components';
+
+const categories = [
+  { name: 'All Articles',          count: 11 },
+  { name: 'Backend Development',   count: 4  },
+  { name: 'AI / Machine Learning', count: 3  },
+  { name: 'DevOps / Systems',      count: 2  },
+  { name: 'Productivity',          count: 1  },
+  { name: 'Career',                count: 1  },
+];
+
+const tags = [
+  'Node.js', 'Python', 'PostgreSQL', 'TypeScript', 'React',
+  'Docker', 'API Design', 'Performance', 'System Design',
+  'LLM', 'CI/CD', 'Architecture', 'OpenAPI', 'React Native',
+];
+
+const articles = [
+  {
+    slug: 'building-ai-native-internal-tools',
+    title: 'Building AI-Native Internal Tools with RAG and PostgreSQL',
+    excerpt: 'How we replaced a brittle rules engine with a retrieval-augmented generation pipeline — reducing classification latency by 60% and making routing decisions auditable by non-engineers.',
+    date: 'May 24, 2026',
+    readingTime: '12 min read',
+    category: 'AI / Machine Learning',
+  },
+  {
+    slug: 'building-scalable-apis',
+    title: 'Building Scalable APIs with Node.js and PostgreSQL',
+    excerpt: 'A deep dive into designing RESTful APIs that handle high throughput using connection pooling, query optimization, and caching strategies.',
+    date: 'May 10, 2026',
+    readingTime: '8 min read',
+    category: 'Backend Development',
+  },
+  {
+    slug: 'fine-tuning-llms',
+    title: 'Fine-Tuning LLMs for Domain-Specific Tasks',
+    excerpt: 'Practical walkthrough of fine-tuning open-source language models on proprietary datasets — covering data preparation, LoRA adapters, and evaluation pipelines.',
+    date: 'Apr 28, 2026',
+    readingTime: '12 min read',
+    category: 'AI / Machine Learning',
+  },
+  {
+    slug: 'zero-downtime-deployment-pipeline',
+    title: 'Designing a Zero-Downtime Deployment Pipeline',
+    excerpt: 'How to orchestrate rolling deployments, blue-green switches, and automated rollback using GitHub Actions and Docker Swarm.',
+    date: 'Apr 14, 2026',
+    readingTime: '10 min read',
+    category: 'DevOps / Systems',
+  },
+  {
+    slug: 'api-documentation-openapi-lsp',
+    title: 'API Documentation as Code: OpenAPI + LSP Integration',
+    excerpt: 'Generating machine-readable API docs directly from TypeScript source, with Language Server Protocol bindings for real-time IDE autocompletion and suggestions.',
+    date: 'Mar 30, 2026',
+    readingTime: '7 min read',
+    category: 'Backend Development',
+  },
+  {
+    slug: 'checklists-in-engineering',
+    title: 'The Pragmatic Case for Checklists in Engineering',
+    excerpt: 'Borrowing from aviation and surgery: why structured checklists reduce cognitive load and consistently catch silent bugs in complex deployment workflows.',
+    date: 'Mar 18, 2026',
+    readingTime: '5 min read',
+    category: 'Productivity',
+  },
+  {
+    slug: 'collaborative-filtering',
+    title: 'Collaborative Filtering at Scale: Lessons from a Recommender System',
+    excerpt: 'Building a production-grade content recommender using Euclidean distance on psychographic preference vectors — trade-offs, bottlenecks, and hard-won wins.',
+    date: 'Mar 03, 2026',
+    readingTime: '11 min read',
+    category: 'AI / Machine Learning',
+  },
+  {
+    slug: 'postgres-query-planning',
+    title: 'PostgreSQL Query Planning Demystified',
+    excerpt: 'Reading EXPLAIN ANALYZE output, identifying sequential scans, and applying partial indexes to cut query latency on tables with millions of rows.',
+    date: 'Feb 20, 2026',
+    readingTime: '9 min read',
+    category: 'Backend Development',
+  },
+  {
+    slug: 'monolith-to-microservices',
+    title: 'From Monolith to Microservices: When and Why',
+    excerpt: 'A decision framework for splitting a monolith, the hidden operational costs of distributed systems, and patterns that keep complexity manageable.',
+    date: 'Feb 06, 2026',
+    readingTime: '13 min read',
+    category: 'Backend Development',
+  },
+  {
+    slug: 'shipping-side-projects',
+    title: 'Shipping Side Projects: A Repeatable Playbook',
+    excerpt: 'The five-phase process I use to take a project from idea to deployed product in under four weeks, without scope creep or burnout.',
+    date: 'Jan 22, 2026',
+    readingTime: '6 min read',
+    category: 'Career',
+  },
+  {
+    slug: 'containerizing-react-native',
+    title: 'Containerizing a React Native Build Environment',
+    excerpt: 'Using Docker to create reproducible iOS and Android build environments, eliminating "works on my machine" failures in CI pipelines.',
+    date: 'Jan 09, 2026',
+    readingTime: '8 min read',
+    category: 'DevOps / Systems',
+  },
+];
+---
+
+<Layout>
+  <div class="min-h-screen pb-16">
+    <Navbar />
+
+    <!-- ─── Hero ─────────────────────────────────────────────────────────── -->
+    <div class="px-4 sm:px-8 lg:px-14 py-10 lg:py-14 border-b border-slate-100">
+      <div class="max-w-2xl">
+        <p class="text-accent text-xs uppercase tracking-widest font-semibold m-0 mb-3">Writing</p>
+        <h1 class="text-4xl lg:text-5xl font-bold text-slate-900 m-0 mb-4 leading-tight">
+          All Articles
+        </h1>
+        <p class="text-secondary text-base lg:text-lg m-0 leading-relaxed">
+          Thoughts on backend engineering, distributed systems, machine learning,
+          and the craft of building software at scale.
+        </p>
+      </div>
+    </div>
+
+    <!-- ─── Main content ──────────────────────────────────────────────────── -->
+    <div class="px-4 sm:px-8 lg:px-14 mt-8">
+      <div class="flex flex-col lg:flex-row lg:gap-12 lg:items-start">
+
+        <!-- ─── Sidebar ────────────────────────────────────────────────────── -->
+        <aside class="w-full lg:w-[260px] lg:shrink-0 lg:sticky lg:top-6 lg:self-start">
+
+          <!-- Mobile filter toggle (hidden on lg) -->
+          <button
+            id="filter-toggle"
+            class="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-slate-200 text-sm font-semibold text-slate-900 hover:border-accent transition-colors mb-4"
+            aria-expanded="false"
+            aria-controls="filter-panel"
+          >
+            <span class="flex items-center gap-2">
+              <Icon name="lucide:sliders-horizontal" class="size-4 text-accent" />
+              Filter &amp; Browse
+            </span>
+            <Icon name="lucide:chevron-down" class="size-4 text-secondary transition-transform" id="filter-chevron" />
+          </button>
+
+          <!-- Filter panel: hidden on mobile until toggled, always visible on lg -->
+          <div id="filter-panel" class="hidden lg:flex flex-col gap-8">
+
+            <!-- Categories -->
+            <div>
+              <p class="text-xs uppercase tracking-widest font-semibold text-secondary m-0 mb-3">
+                Categories
+              </p>
+              <nav aria-label="Article categories">
+                <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
+                  {categories.map((cat, i) => (
+                    <li>
+                      <button
+                        class={[
+                          'w-full flex items-center justify-between py-2 pr-3 text-sm transition-colors text-left border-l-2',
+                          i === 0
+                            ? 'pl-3.5 border-accent text-accent font-semibold bg-accent/5'
+                            : 'pl-4 border-transparent text-slate-700 hover:text-accent hover:bg-slate-50',
+                        ].join(' ')}
+                        data-category-btn
+                        data-category={cat.name}
+                      >
+                        <span>{cat.name}</span>
+                        <span class={[
+                          'text-xs font-medium px-1.5 py-0.5 border tabular-nums',
+                          i === 0 ? 'border-accent/40 text-accent' : 'border-slate-200 text-secondary',
+                        ].join(' ')}>
+                          {cat.count}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            <!-- Tags -->
+            <div>
+              <p class="text-xs uppercase tracking-widest font-semibold text-secondary m-0 mb-3">
+                Tags
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                {tags.map((tag) => (
+                  <span class="border border-slate-200 px-2.5 py-1 text-xs text-slate-600 hover:border-accent hover:text-accent transition-colors cursor-pointer">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- ─── Feed ───────────────────────────────────────────────────────── -->
+        <div class="flex-1 min-w-0 mt-6 lg:mt-0">
+
+          <!-- Filter bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-200 mb-1">
+            <!-- Left: sort + count -->
+            <div class="flex items-center gap-3">
+              <label for="sort-select" class="text-xs uppercase tracking-widest font-semibold text-secondary whitespace-nowrap">
+                Sort by
+              </label>
+              <div class="relative">
+                <select
+                  id="sort-select"
+                  class="appearance-none border border-slate-200 text-sm text-slate-900 px-3 py-1.5 pr-7 bg-white hover:border-accent transition-colors cursor-pointer focus:outline-none focus:border-accent"
+                >
+                  <option value="latest">Latest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="reading-time">Reading Time</option>
+                </select>
+                <Icon
+                  name="lucide:chevron-down"
+                  class="size-3 text-secondary absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                />
+              </div>
+              <span id="article-count" class="text-xs text-secondary tabular-nums">
+                {articles.length} articles
+              </span>
+            </div>
+
+            <!-- Right: search -->
+            <div class="relative">
+              <Icon
+                name="lucide:search"
+                class="size-3.5 text-secondary absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
+              <input
+                id="search-input"
+                type="search"
+                placeholder="Search articles…"
+                class="border border-slate-200 text-sm text-slate-900 pl-8 pr-4 py-1.5 w-full sm:w-56 focus:outline-none focus:border-accent hover:border-accent transition-colors placeholder:text-slate-400 bg-white"
+              />
+            </div>
+          </div>
+
+          <!-- Article list -->
+          <div id="article-list">
+            {articles.map((article) => (
+              <ArticleItem
+                href={`/articles/${article.slug}`}
+                title={article.title}
+                excerpt={article.excerpt}
+                date={article.date}
+                readingTime={article.readingTime}
+                category={article.category}
+              />
+            ))}
+
+            <!-- Empty state -->
+            <div id="empty-state" class="hidden py-16 text-center">
+              <Icon name="lucide:file-search" class="size-10 text-secondary mx-auto mb-3" />
+              <p class="text-secondary text-sm m-0">No articles match your search.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  // ── Mobile filter toggle ─────────────────────────────────────────────────
+  const filterToggle  = document.getElementById('filter-toggle') as HTMLButtonElement | null;
+  const filterPanel   = document.getElementById('filter-panel');
+  const filterChevron = document.getElementById('filter-chevron');
+
+  filterToggle?.addEventListener('click', () => {
+    const isOpen = !filterPanel?.classList.contains('hidden');
+    filterPanel?.classList.toggle('hidden', isOpen);
+    filterChevron?.classList.toggle('rotate-180', !isOpen);
+    filterToggle.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  // ── Filtering state ──────────────────────────────────────────────────────
+  const articleEls  = Array.from(document.querySelectorAll<HTMLElement>('[data-article]'));
+  const countEl     = document.getElementById('article-count');
+  const emptyState  = document.getElementById('empty-state');
+  const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+
+  let activeCategory = 'All Articles';
+  let searchQuery    = '';
+
+  function applyFilters() {
+    let visible = 0;
+    articleEls.forEach((el) => {
+      const titleMatch    = !searchQuery || (el.dataset.title   ?? '').includes(searchQuery);
+      const excerptMatch  = !searchQuery || (el.dataset.excerpt ?? '').includes(searchQuery);
+      const categoryMatch = activeCategory === 'All Articles' || el.dataset.category === activeCategory;
+      const show = (titleMatch || excerptMatch) && categoryMatch;
+      el.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (countEl)    countEl.textContent = `${visible} article${visible !== 1 ? 's' : ''}`;
+    if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
+  }
+
+  // ── Category buttons ─────────────────────────────────────────────────────
+  document.querySelectorAll<HTMLElement>('[data-category-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.category ?? 'All Articles';
+
+      document.querySelectorAll<HTMLElement>('[data-category-btn]').forEach((b) => {
+        const active = b.dataset.category === activeCategory;
+        b.className = [
+          'w-full flex items-center justify-between py-2 pr-3 text-sm transition-colors text-left border-l-2',
+          active
+            ? 'pl-3.5 border-accent text-accent font-semibold bg-accent/5'
+            : 'pl-4 border-transparent text-slate-700 hover:text-accent hover:bg-slate-50',
+        ].join(' ');
+
+        const badge = b.querySelector<HTMLElement>('span:last-child');
+        if (badge) {
+          badge.className = [
+            'text-xs font-medium px-1.5 py-0.5 border tabular-nums',
+            active ? 'border-accent/40 text-accent' : 'border-slate-200 text-secondary',
+          ].join(' ');
+        }
+      });
+
+      applyFilters();
+    });
+  });
+
+  // ── Search ───────────────────────────────────────────────────────────────
+  searchInput?.addEventListener('input', (e) => {
+    searchQuery = (e.target as HTMLInputElement).value.toLowerCase().trim();
+    applyFilters();
+  });
+</script>

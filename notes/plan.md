@@ -173,3 +173,27 @@ Unused / scaffolded components (not rendered): `HeroRight`, `InfoCard`, `StatsRo
 - `border-slate-200` replaces the old `border-white/8` pattern from the dark theme
 - All data (projects, books) currently inline in component files — move to `constants/data.ts` when ready to extend
 - VS Code CSS validator disabled (`.vscode/settings.json`) to suppress false-positive `@theme` error
+
+---
+
+### All Articles Page — DONE (May 2026)
+
+**Route:** `/articles` → `src/pages/articles.astro`
+
+**New components:**
+- `ArticleItem.astro` — editorial 3-column row: date+dot | title+excerpt | reading-time+badge. Mobile collapses to stacked layout with inline metadata row below excerpt.
+
+**Page structure:**
+- Hero: "Writing" eyebrow → `h1 All Articles` → supporting description (left-aligned, `border-b` separator)
+- Main layout: `lg:flex-row` 2-column — `260px` sticky sidebar + flexible feed
+- Sidebar: categories list (count badges, active left-border indicator) + tag chips. Collapsed behind toggle on mobile.
+- Filter bar: sort dropdown + live article count + search input
+- Feed: vertical `ArticleItem` list with empty state fallback
+
+**Interactions (client JS):**
+- Mobile sidebar toggle (chevron rotates, `aria-expanded` updated)
+- Category filter — updates active-state classes + filters `[data-article]` elements
+- Live search — filters by `data-title` and `data-excerpt` data attributes
+- Article count updates dynamically on every filter change
+
+**Navbar:** "Articles" link added to desktop nav list and mobile dropdown
