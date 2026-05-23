@@ -1,0 +1,18 @@
+---
+import HeroLeft from './HeroLeft.astro';
+import HeroRight from './HeroRight.astro';
+---
+
+<section class="px-4 lg:px-14 py-6 flex flex-row lg:py-8 border-b border-slate-100">
+  <!-- Left content in normal flow — determines section height -->
+  <!-- <div class="lg:pr-[428px]"> -->
+  <div class="">
+    <HeroLeft />
+  </div>
+
+
+  <!-- Right panel: absolutely positioned, clipped to section height -->
+  <!-- <div class="mt-10 lg:mt-0 lg:absolute lg:top-8 lg:bottom-8 lg:right-14 lg:w-[380px] lg:overflow-hidden">
+    <HeroRight />
+  </div> -->
+</section>

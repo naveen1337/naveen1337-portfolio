@@ -1,0 +1,25 @@
+---
+interface Props {
+  cover: string;
+  title: string;
+  author: string;
+  year: string;
+  description: string;
+}
+
+const { cover, title, author, year, description } = Astro.props;
+---
+
+<article class="border-b border-slate-200 last:border-b-0 p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 hover:-translate-y-1 transition-transform cursor-pointer">
+  <img
+    src={cover}
+    alt={`${title} cover`}
+    loading="lazy"
+    class="w-14 h-20 sm:w-20 sm:h-28 object-cover shrink-0"
+  />
+  <div class="flex flex-col gap-1.5">
+    <h3 class="font-semibold text-slate-900 m-0 text-base">{title}</h3>
+    <p class="text-accent font-semibold text-sm m-0">{author} &middot; {year}</p>
+    <p class="text-secondary text-sm m-0 leading-relaxed">{description}</p>
+  </div>
+</article>

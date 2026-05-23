@@ -1,0 +1,80 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<nav class="px-8 lg:px-14 flex items-center justify-between gap-4 py-3 border-b border-slate-100" aria-label="Primary">
+  <!-- Logo -->
+  <a href="/" class="flex items-center gap-2 no-underline" aria-label="Naveen home">
+    <span class="w-8 h-8 bg-accent grid place-items-center text-white font-bold text-sm select-none">N</span>
+    <span class="font-bold tracking-wide text-slate-900">Naveen</span>
+  </a>
+
+  <!-- Nav links (desktop) -->
+  <ul class="hidden md:flex gap-5 list-none m-0 p-0">
+    <li><a href="#about"    class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">About</a></li>
+    <li><a href="#projects" class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Projects</a></li>
+    <li><a href="#reading"  class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Reading</a></li>
+  </ul>
+
+  <!-- Right side: CTA (desktop) + hamburger (mobile) -->
+  <div class="flex items-center gap-3">
+    <a href="mailto:naveen@example.com"
+       class="hidden md:inline-flex uppercase bg-accent items-center gap-1.5 border border-slate-200 px-4 py-2 text-white font-semibold text-sm hover:border-accent hover:text-white transition-colors no-underline">
+      <Icon name="lucide:inbox" class="size-4" />
+      Contact me
+    </a>
+
+    <!-- Hamburger button (mobile only) -->
+    <button
+      id="nav-toggle"
+      class="md:hidden p-1.5 text-slate-700 hover:text-accent transition-colors"
+      aria-label="Toggle navigation menu"
+      aria-expanded="false"
+      aria-controls="nav-menu"
+    >
+      <Icon name="lucide:menu" class="size-5" id="icon-menu" />
+      <Icon name="lucide:x" class="size-5 hidden" id="icon-close" />
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile dropdown menu -->
+<div id="nav-menu" class="hidden md:hidden border-b border-slate-100 bg-white px-8 py-5">
+  <ul class="flex flex-col gap-5 list-none m-0 p-0">
+    <li><a href="#about"    class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">About</a></li>
+    <li><a href="#projects" class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Projects</a></li>
+    <li><a href="#reading"  class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Reading</a></li>
+  </ul>
+</div>
+
+<script>
+  const toggle = document.getElementById('nav-toggle') as HTMLButtonElement;
+  const menu = document.getElementById('nav-menu');
+  const iconMenu = document.getElementById('icon-menu');
+  const iconClose = document.getElementById('icon-close');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = !menu?.classList.contains('hidden');
+    if (isOpen) {
+      menu?.classList.add('hidden');
+      iconMenu?.classList.remove('hidden');
+      iconClose?.classList.add('hidden');
+      toggle.setAttribute('aria-expanded', 'false');
+    } else {
+      menu?.classList.remove('hidden');
+      iconMenu?.classList.add('hidden');
+      iconClose?.classList.remove('hidden');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  // Close menu when a nav link is clicked
+  document.querySelectorAll('#nav-menu a').forEach((link) => {
+    link.addEventListener('click', () => {
+      menu?.classList.add('hidden');
+      iconMenu?.classList.remove('hidden');
+      iconClose?.classList.add('hidden');
+      toggle?.setAttribute('aria-expanded', 'false');
+    });
+  });
+</script>

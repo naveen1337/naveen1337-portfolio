@@ -1,0 +1,57 @@
+---
+import { Icon } from 'astro-icon/components';
+
+const techIconMap: Record<string, string> = {
+  'React':            'simple-icons:react',
+  'Node.js':          'simple-icons:nodedotjs',
+  'PostgreSQL':       'simple-icons:postgresql',
+  'Maps API':         'lucide:map-pin',
+  'React Native':     'simple-icons:react',
+  'iOS':              'simple-icons:apple',
+  'Android':          'simple-icons:android',
+  'Python':           'simple-icons:python',
+  'Machine Learning': 'lucide:brain',
+  'TypeScript':       'simple-icons:typescript',
+  'OpenAPI':          'lucide:file-code-2',
+  'LSP':              'lucide:code-2',
+  'LLM':              'lucide:bot',
+};
+
+interface Props {
+  icon: string;
+  title: string;
+  date: string;
+  description: string;
+  tags: string[];
+}
+
+const { icon, title, date, description, tags } = Astro.props;
+---
+
+<article class="border-b border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 hover:-translate-y-0.5 transition-transform cursor-pointer">
+  <!-- Project icon box -->
+  <div class="shrink-0 size-10 sm:size-16 bg-accent border border-blue-200 flex items-center justify-center">
+    <Icon name={icon} class="size-5 sm:size-8 text-white" />
+  </div>
+
+  <!-- Content -->
+  <div class="flex flex-col gap-2 flex-1 min-w-0">
+    <!-- Title + Date -->
+    <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+      <h3 class="font-bold text-slate-900 m-0 text-base leading-snug">{title}</h3>
+      <span class="self-start md:border border-accent/40 uppercase lg:px-2.5 py-0.5 text-[10px] text-accent font-semibold whitespace-nowrap">{date}</span>
+    </div>
+
+    <p class="text-secondary text-sm m-0 leading-relaxed">{description}</p>
+
+    <!-- Tech tags with small icons -->
+    <div class="flex flex-wrap gap-1.5 mt-auto pt-1">
+      {tags.map((tag) => (
+        <span class="inline-flex items-center gap-1 border border-slate-200 px-2 py-0.5 text-xs text-accent font-medium">
+          <Icon name={techIconMap[tag] ?? 'lucide:code-2'} class="size-3 shrink-0" />
+          {tag}
+        </span>
+      ))}
+    </div>
+  </div>
+</article>

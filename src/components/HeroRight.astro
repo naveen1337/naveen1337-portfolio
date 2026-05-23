@@ -1,0 +1,97 @@
+---
+import { Icon } from 'astro-icon/components';
+
+const feed = [
+  {
+    type: "Currently Building",
+    icon: "lucide:code-2",
+    time: "2h ago",
+    tags: ["AI", "Game Systems", "Rust"],
+    content:
+      "Working on an AI-driven persistent game world engine with memory simulation and emergent NPC behavior.",
+  },
+  {
+    type: "Reading",
+    icon: "lucide:book-open",
+    time: "1d ago",
+    tags: ["Book", "System Design"],
+    content:
+      "Reading Designing Data-Intensive Applications and taking notes on distributed consistency models.",
+  },
+  {
+    type: "Opinion",
+    icon: "lucide:pen-line",
+    time: "3d ago",
+    tags: ["Engineering", "API Design"],
+    content: "Good APIs reduce cognitive load more than they reduce code.",
+  },
+  {
+    type: "Writing",
+    icon: "lucide:file-text",
+    time: "5d ago",
+    tags: ["Backend", "Architecture"],
+    content:
+      "Drafting an article about fault-tolerant background job systems in Node.js.",
+  },
+  {
+    type: "Researching",
+    icon: "lucide:search",
+    time: "1w ago",
+    tags: ["RAG", "LLM"],
+    content:
+      "Exploring lightweight local models for document routing before cloud inference.",
+  },
+];
+---
+
+<section class="flex flex-col border border-slate-200 h-full">
+  <!-- Section header -->
+  <header class="flex items-center px-5 py-4 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <Icon name="lucide:activity" class="size-5 text-accent" />
+      <h2 class="font-bold text-2xl text-slate-900 m-0">Activity</h2>
+    </div>
+  </header>
+
+  <div class="border-t border-slate-200 flex-shrink-0"></div>
+
+  <!-- Feed items with fade-out overlay -->
+  <div class="relative flex-1 overflow-hidden">
+  <ol class="flex flex-col m-0 p-0 list-none">
+    {feed.map((item, i) => (
+      <li class:list={["flex gap-3 px-5 py-4", i !== feed.length - 1 && "border-b border-slate-100"]}>
+        <!-- Icon -->
+        <div class="flex-shrink-0 mt-0.5 size-5 flex items-center justify-center text-accent">
+          <Icon name={item.icon} class="size-3.5" />
+        </div>
+
+        <!-- Content -->
+        <div class="flex flex-col gap-1.5 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-semibold text-slate-900 tracking-tight">{item.type}</span>
+            <span class="text-xs text-secondary">{item.time}</span>
+          </div>
+          <p class="text-sm text-slate-700 leading-snug m-0">{item.content}</p>
+          <div class="flex flex-wrap gap-1.5 mt-0.5">
+            {item.tags.map((tag) => (
+              <span class="text-[10px] font-medium tracking-wide text-secondary border border-slate-200 px-2 py-0.5">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+    <!-- Fade overlay + VIEW ALL button -->
+    <div class="absolute bottom-0 inset-x-0 h-32 flex flex-col justify-end" style="background: linear-gradient(to bottom, transparent, white);">
+      <div class="px-5 pb-5">
+        <a href="#" class="inline-flex items-center gap-1.5 text-accent text-sm font-bold hover:underline no-underline">
+          VIEW ALL ACTIVITY
+          <Icon name="lucide:arrow-right" class="size-4" />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

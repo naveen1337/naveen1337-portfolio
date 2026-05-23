@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+@theme {
+  --color-page:      #ffffff;
+  --color-card:      #f8fafc;
+  --color-accent:    #0165fd;
+  --color-secondary: #64748b;
+  --font-sans: "Montserrat", "Segoe UI", sans-serif;
+}
+

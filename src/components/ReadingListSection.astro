@@ -1,0 +1,47 @@
+---
+import { Icon } from 'astro-icon/components';
+import BookCard from './BookCard.astro';
+
+const books = [
+  {
+    cover: 'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1647403235i/6667514.jpg',
+    title: 'The Checklist Manifesto: How to Get Things Right',
+    author: 'Atul Gawande',
+    year: '2009',
+    description: 'Explores how simple checklists can prevent errors and improve performance in complex fields like medicine, aviation, and construction. Through real-world examples, Gawande shows that structured routines enhance communication and consistency.'
+  },
+  {
+    cover: 'https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1320430266i/2706211.jpg',
+    title: 'The Unthinkable: Who Survives When Disaster Strikes—and Why',
+    author: 'Amanda Ripley',
+    year: '2008',
+    description: 'Examines how people respond to disasters—why some freeze, others act, and a few survive. Blending science, psychology, and survivor stories, explores mental patterns behind fear and decision-making, showing how awareness and training works.'
+  },
+  {
+    cover: 'https://upload.wikimedia.org/wikipedia/en/2/2f/Big-short-inside-the-doomsday-machine.jpg',
+    title: 'The Big Short: Inside the Doomsday Machine',
+    author: 'Michael Lewis',
+    year: '2010',
+    description: 'Reveals how a few unconventional investors foresaw the 2008 financial crisis and profited from the collapse of the housing market. Through sharp storytelling, Lewis exposes Wall Street\'s greed, ignorance, and complex financial instruments.'
+  }
+];
+---
+
+<section id="reading" class="flex flex-col border-b border-slate-200 sm:border">
+  <header class="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4">
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <Icon name="lucide:book-open" class="size-4 sm:size-5 text-accent" />
+      <h2 class="font-bold text-sm sm:text-2xl text-slate-900 m-0">My Reading List</h2>
+    </div>
+    <a href="#" class="inline-flex items-center gap-1 text-accent text-xs sm:text-sm font-bold hover:underline no-underline whitespace-nowrap">
+      VIEW ALL
+      <Icon name="lucide:arrow-right" class="size-4" />
+    </a>
+  </header>
+
+  <div class="border-t border-slate-200"></div>
+
+  <div class="flex flex-col gap-3 lg:p-5">
+    {books.map((book) => <BookCard {...book} />)}
+  </div>
+</section>

@@ -1,0 +1,58 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<div class="flex flex-col gap-6 max-w-3xl" id="about">
+  <!-- Badge -->
+  <span class="inline-flex w-fit border  border-accent px-3 py-1 text-accent text-xs tracking-widest uppercase font-semibold">
+    Available for Work
+  </span>
+
+  <!-- Headline -->
+  <h1 class="text-5xl lg:text-6xl font-bold leading-tighter text-slate-900 m-0">
+    Hi, I'm <span class="text-accent">Naveen</span> !
+  </h1>
+
+  <!-- Bio -->
+  <div class="flex flex-col gap-3">
+    <p class="text-gray-800 m-0 text-base lg:text-lg leading-relaxed">
+      Full-stack web developer with <span class="font-bold">5 years</span> of experience crafting scalable solutions, using Node.js, Python, React, and PostgreSQL Technologies
+    </p>
+    <p class="hidden sm:block text-gray-800 m-0 text-base lg:text-lg leading-relaxed">
+      Driven by a passion for transforming real-world challenges into effective, practical solutions that simplify and streamline complex business operations
+    </p>
+  </div>
+
+  <!-- CTA buttons -->
+  <div class="flex gap-2 sm:gap-3 flex-wrap">
+    <a href="#projects"
+       class="inline-flex items-center gap-1.5 bg-accent text-white px-4 py-2 sm:px-6 sm:py-3 font-semibold text-xs sm:text-sm hover:bg-blue-700 transition-colors no-underline">
+      <Icon name="lucide:rocket" class="size-4" />
+      View Projects
+    </a>
+    <a href="mailto:naveen@example.com"
+       class="inline-flex items-center gap-1.5 border border-slate-300 text-slate-900 px-4 py-2 sm:px-6 sm:py-3 font-semibold text-xs sm:text-sm hover:border-accent hover:text-accent transition-colors no-underline">
+      <Icon name="lucide:mail" class="size-4" />
+      Contact Me
+    </a>
+  </div>
+
+  <!-- Social links -->
+  <div class="flex flex-wrap gap-2 sm:gap-3" aria-label="Social links">
+    <a href="#" aria-label="GitHub"
+       class="inline-flex items-center gap-1.5 border border-slate-200 px-3 py-1.5 text-secondary text-sm hover:text-accent hover:border-accent transition-colors no-underline">
+      <Icon name="simple-icons:github" class="size-4" />
+      GitHub
+    </a>
+    <a href="#" aria-label="LinkedIn"
+       class="inline-flex items-center gap-1.5 border border-slate-200 px-3 py-1.5 text-secondary text-sm hover:text-accent hover:border-accent transition-colors no-underline">
+      <Icon name="simple-icons:linkedin" class="size-4" />
+      LinkedIn
+    </a>
+    <a href="#" aria-label="X / Twitter"
+       class="inline-flex items-center gap-1.5 border border-slate-200 px-3 py-1.5 text-secondary text-sm hover:text-accent hover:border-accent transition-colors no-underline">
+      <Icon name="simple-icons:x" class="size-4" />
+      Twitter
+    </a>
+  </div>
+</div>
