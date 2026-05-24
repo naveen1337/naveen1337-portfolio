@@ -215,7 +215,7 @@ html.dark .prose-writeup code {
   border-color: #24324A;
 }
 html.dark .prose-writeup pre {
-  background: #111827;
+  background: #111827 !important;
   border-color: #24324A;
 }
 html.dark .prose-writeup pre code { color: #B7C4D8; }

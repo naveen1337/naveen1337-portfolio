@@ -1,0 +1,77 @@
+---
+title: "Multi Vendor Food Delivery Application"
+subtitle: "A cross-platform food delivery app built with React Native — supporting multiple restaurant vendors, auto-assigned delivery partners, real-time tracking, and secure payments on iOS and Android."
+excerpt: "App lets users explore multiple restaurants, place orders, and get food delivered by an auto-assigned delivery partner. Built with React Native, it runs on both iOS and Android with real-time tracking, secure payments, and push notifications."
+category: "Personal Projects"
+date: "May 2021"
+readingTime: "5 min read"
+author:
+  name: "Naveen"
+  initials: "N"
+tags:
+  - Infrastructure
+related:
+  - field-canvassing-app
+  - content-recommender-system
+toc:
+  - id: "overview"
+    label: "Overview"
+    level: 2
+  - id: "multi-vendor-model"
+    label: "Multi-Vendor Model"
+    level: 2
+  - id: "delivery-assignment"
+    label: "Delivery Assignment"
+    level: 2
+  - id: "real-time-tracking"
+    label: "Real-Time Tracking"
+    level: 2
+  - id: "lessons"
+    label: "Lessons"
+    level: 2
+---
+
+## Overview
+
+Food delivery apps look deceptively simple from the outside. Under the hood, they coordinate three separate actors simultaneously — customer, restaurant, and delivery partner — with different interfaces, different data needs, and hard latency requirements at every handoff.
+
+This project was built as a full multi-vendor platform: customers can browse multiple restaurants in the same session, restaurants manage their own menus and order queues independently, and delivery partners are auto-assigned based on proximity and availability.
+
+## Multi-Vendor Model
+
+The core data model separates vendors completely. Each restaurant has its own menu, its own availability schedule, and its own order inbox. A single customer cart can only contain items from one restaurant at a time — a deliberate constraint that keeps the delivery routing logic tractable.
+
+Restaurant operators access a lightweight web dashboard to:
+
+- Manage menu items and pricing
+- Set operating hours and temporary closures
+- Accept or reject incoming orders
+- Mark orders as ready for pickup
+
+The customer-facing app communicates with the same backend but surfaces an entirely different set of views, with no operator-level controls exposed.
+
+## Delivery Assignment
+
+When a restaurant marks an order ready for pickup, the backend triggers an assignment job. The algorithm considers:
+
+1. Partner distance from the restaurant (PostGIS radius query)
+2. Partner current load (active deliveries in flight)
+3. Partner acceptance rate over the trailing 30 days
+
+The selected partner receives a push notification and has 60 seconds to accept. If no response, the algorithm moves to the next candidate in the queue.
+
+## Real-Time Tracking
+
+Location updates flow from the delivery partner's app to the customer via WebSockets. The partner app reports GPS coordinates every 4 seconds while a delivery is active. The backend forwards these to the relevant customer session without persisting them — delivery paths are ephemeral and stored only in aggregate for partner performance metrics.
+
+This keeps the live tracking fast and lightweight without accumulating large volumes of location data per delivery.
+
+## Lessons
+
+The hardest part was not the happy path — it was handling edge cases gracefully without exposing complexity to the customer:
+
+- **Restaurant goes offline mid-order**: automatic cancellation with customer refund and notification
+- **Delivery partner loses connectivity**: last known position shown with a "location unavailable" indicator, delivery timer paused
+- **Payment failure at checkout**: cart preserved, customer redirected to a payment retry flow without losing selections
+
+Building robust state machines for order status transitions early in the project paid back significantly during testing, when edge cases that seemed unlikely turned out to be surprisingly common.

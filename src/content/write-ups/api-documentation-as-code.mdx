@@ -1,0 +1,84 @@
+---
+title: "API Documentation as a Code"
+subtitle: "Machine-readable API docs generated directly from TypeScript source — enabling code-generation LLMs and Language Server Protocol integrations to produce accurate, always-up-to-date suggestions."
+excerpt: "API documentation generated directly from code provides clearly abstracted methods for HTTP and system APIs — supporting code-generation LLMs and LSP integrations for accurate developer suggestions."
+category: "Software Engineering"
+date: "Oct 2025"
+readingTime: "6 min read"
+author:
+  name: "Naveen"
+  initials: "N"
+tags:
+  - TypeScript
+  - OpenAPI
+  - AI/ML
+  - Infrastructure
+related:
+  - content-recommender-system
+  - field-canvassing-app
+toc:
+  - id: "overview"
+    label: "Overview"
+    level: 2
+  - id: "generation-pipeline"
+    label: "Generation Pipeline"
+    level: 2
+  - id: "lsp-integration"
+    label: "LSP Integration"
+    level: 2
+  - id: "benefits-for-llms"
+    label: "Benefits for LLMs"
+    level: 2
+  - id: "takeaways"
+    label: "Takeaways"
+    level: 2
+---
+
+## Overview
+
+API documentation has a well-known decay problem. Within weeks of a project's first release, the docs and the code start to diverge — endpoints get renamed, request shapes change, and the documentation quietly becomes a liability instead of an asset.
+
+Documentation as code flips this: the source of truth lives inside the codebase itself. When documentation is generated from type annotations and schema definitions, it cannot drift by construction.
+
+## Generation Pipeline
+
+Using TypeScript decorators or a schema-first approach, HTTP handlers are annotated directly:
+
+```typescript
+@Route({
+  method: 'POST',
+  path: '/tickets',
+  summary: 'Create a support ticket',
+  body: CreateTicketSchema,
+  response: TicketResponseSchema,
+})
+async createTicket(req: Request): Promise<TicketResponse> {
+  // implementation
+}
+```
+
+A build step reads these annotations and emits a compliant OpenAPI 3.1 document alongside the compiled output. No separate documentation update step, no manual sync required. The docs are always in sync because they are the code.
+
+## LSP Integration
+
+Once the OpenAPI document is machine-readable, it feeds directly into Language Server Protocol tooling. Editors surface type signatures, parameter descriptions, and example responses in autocomplete — without the developer leaving their editor.
+
+This is particularly valuable across team boundaries. A frontend engineer consuming an internal API sees the same documentation as the backend engineer who wrote it, and that documentation reflects the current state of the code at that moment.
+
+## Benefits for LLMs
+
+Code-generation models work significantly better when they have accurate, structured schema context. An up-to-date OpenAPI document in the repository means:
+
+- LLMs can suggest correct request structures on the first attempt
+- Missing required fields are caught before the request hits the wire
+- Generated client code compiles without manual adjustment
+
+The combination of LSP and machine-readable docs extends that benefit to every developer on the team, whether they use AI tooling or not.
+
+## Takeaways
+
+- Documentation that lives in code stays accurate by construction
+- OpenAPI 3.1 is the practical standard — choose a generator that supports it natively
+- LSP integration multiplies the value across the entire team at no ongoing cost
+- LLMs benefit significantly from structured, up-to-date schema context
+- The upfront investment in annotations pays back quickly in reduced context-switching

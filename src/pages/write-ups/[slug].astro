@@ -6,100 +6,66 @@ import { Icon } from 'astro-icon/components';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
-  // MDX-backed posts from the content collection
-  const collectionPosts = await getCollection('write-ups');
-  const collectionPaths = collectionPosts.map(entry => ({
-    params: { slug: entry.id },
-    props: { entry },
-  }));
-
-  // Legacy inline posts (hardcoded HTML in this template)
-  const legacyPaths = [
-    { params: { slug: 'building-ai-native-internal-tools' }, props: { entry: null } },
-  ];
-
-  return [...collectionPaths, ...legacyPaths];
-}
-
-const { entry } = Astro.props;
-
-// ── MDX post: render content and pull metadata from frontmatter ───────────────
-let Content: ((_props: Record<string, unknown>) => unknown) | null = null;
-
-const article = entry
-  ? {
-      title:       entry.data.title,
-      subtitle:    entry.data.subtitle,
-      category:    entry.data.category,
-      date:        entry.data.date,
-      readingTime: entry.data.readingTime,
-      author:      entry.data.author,
-      tags:        entry.data.tags,
-    }
-  : {
-      // ── Legacy hardcoded data ───────────────────────────────────────────────
-      title:       'Building AI-Native Internal Tools with RAG and PostgreSQL',
-      subtitle:    'How we replaced a brittle rules engine with a retrieval-augmented generation pipeline — reducing classification latency by 60% and making routing decisions fully auditable by non-engineers.',
-      category:    'AI / ML',
-      date:        'May 10, 2026',
-      readingTime: '12 min read',
-      author:      { name: 'Naveen', initials: 'N' },
-      tags:        ['AI', 'RAG', 'PostgreSQL', 'Docker', 'Python', 'Embeddings', 'LLM'],
+  function parseDateStr(d: string): number {
+    const months: Record<string, number> = {
+      Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+      Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
     };
+    const [mon, yr] = d.split(' ');
+    return new Date(parseInt(yr), months[mon] ?? 0, 1).getTime();
+  }
 
-if (entry) {
-  const rendered = await render(entry);
-  Content = rendered.Content;
+  const allPosts = await getCollection('write-ups');
+  const sorted = allPosts.sort((a, b) => parseDateStr(b.data.date) - parseDateStr(a.data.date));
+
+  return sorted.map((entry, i) => {
+    const prevEntry = sorted[i + 1] ?? null; // older post
+    const nextEntry = sorted[i - 1] ?? null; // newer post
+
+    // Resolve related slugs to full post data
+    const relatedSlugs = entry.data.related ?? [];
+    const relatedPosts = relatedSlugs
+      .map(slug => sorted.find(p => p.id === slug))
+      .filter((p): p is NonNullable<typeof p> => p != null);
+
+    return {
+      params: { slug: entry.id },
+      props: { entry, prevEntry, nextEntry, relatedPosts },
+    };
+  });
 }
 
-const toc = entry?.data.toc ?? [
-  { id: 'background',          label: 'Background',            level: 2 },
-  { id: 'the-problem',         label: 'The Problem',           level: 2 },
-  { id: 'architecture',        label: 'Architecture Overview', level: 2 },
-  { id: 'embedding-pipeline',  label: 'Embedding Pipeline',    level: 3 },
-  { id: 'retrieval-layer',     label: 'Retrieval Layer',       level: 3 },
-  { id: 'generation-layer',    label: 'Generation Layer',      level: 3 },
-  { id: 'postgres-integration',label: 'PostgreSQL Integration',level: 2 },
-  { id: 'results',             label: 'Results',               level: 2 },
-  { id: 'lessons',             label: 'Lessons Learned',       level: 2 },
-];
+const { entry, prevEntry, nextEntry, relatedPosts } = Astro.props;
+const rendered = await render(entry);
+const Content = rendered.Content;
 
-const prevPost = entry?.data.prev ?? { slug: 'postgres-query-planning', title: 'PostgreSQL Query Planning Demystified' };
-const nextPost = entry?.data.next ?? { slug: 'fine-tuning-llms',        title: 'Fine-Tuning LLMs for Domain-Specific Tasks' };
+// Use frontmatter ToC if provided, otherwise auto-generate from MDX headings
+const toc = entry.data.toc ?? rendered.headings.map(h => ({
+  id:    h.slug,
+  label: h.text,
+  level: h.depth,
+}));
 
-const relatedArticles = entry?.data.related ?? [
-  {
-    title:       'Fine-Tuning LLMs for Domain-Specific Tasks',
-    description: 'Practical walkthrough of fine-tuning open-source models on proprietary datasets using LoRA adapters.',
-    readingTime: '12 min',
-    category:    'AI / ML',
-    href:        '/write-ups/fine-tuning-llms',
-  },
-  {
-    title:       'PostgreSQL Query Planning Demystified',
-    description: 'Reading EXPLAIN ANALYZE output and applying partial indexes to cut query latency at scale.',
-    readingTime: '9 min',
-    category:    'Backend',
-    href:        '/write-ups/postgres-query-planning',
-  },
-  {
-    title:       'Collaborative Filtering at Scale',
-    description: 'Building a production-grade recommender using psychographic preference vectors.',
-    readingTime: '11 min',
-    category:    'AI / ML',
-    href:        '/write-ups/collaborative-filtering',
-  },
-];
+const article = {
+  title:       entry.data.title,
+  subtitle:    entry.data.subtitle,
+  category:    entry.data.category,
+  date:        entry.data.date,
+  readingTime: entry.data.readingTime,
+  author:      entry.data.author,
+  tags:        entry.data.tags,
+};
 
-// ── Code block content (only used by the legacy inline post) ─────────────────
-const codeEmbed = `from sentence_transformers import SentenceTransformer
+const prevPost = prevEntry ? { slug: prevEntry.id, title: prevEntry.data.title } : null;
+const nextPost = nextEntry ? { slug: nextEntry.id, title: nextEntry.data.title } : null;
 
-model = SentenceTransformer("bge-small-en-v1.5-finetuned")
-
-def embed_ticket(ticket: dict) -> list[float]:
-    text = f"{ticket['subject']} {ticket['body']}"
-    normalized = text.lower().strip()
-    return model.encode(normalized, normalize_embeddings=True).tolist()`;
+const relatedArticles = relatedPosts.map(p => ({
+  title:       p.data.title,
+  description: p.data.excerpt,
+  readingTime: p.data.readingTime,
+  category:    p.data.category,
+  href:        `/write-ups/${p.id}`,
+}));
 ---
 
 <Layout>
@@ -117,7 +83,7 @@ def embed_ticket(ticket: dict) -> list[float]:
           <Icon name="lucide:chevron-right" class="size-3 text-slate-300 dark:text-slate-600 shrink-0" />
           <a href="/write-ups" class="hover:text-accent transition-colors no-underline">Write ups</a>
           <Icon name="lucide:chevron-right" class="size-3 text-slate-300 dark:text-slate-600 shrink-0" />
-          <span class="text-slate-400 dark:text-slate-500 truncate">Building AI-Native Internal Tools</span>
+          <span class="text-slate-400 dark:text-slate-500 truncate">{article.title}</span>
         </nav>
 
         <!-- Category badge -->
@@ -149,7 +115,7 @@ def embed_ticket(ticket: dict) -> list[float]:
               <span class="font-semibold text-slate-900 dark:text-slate-100 text-sm">{article.author.name}</span>
               <div class="flex items-center gap-2.5 text-xs text-secondary sm:ml-3">
                 <span class="hidden sm:inline text-slate-200 dark:text-slate-700">&middot;</span>
-                <time datetime="2026-05-10">{article.date}</time>
+                <time datetime={article.date}>{article.date}</time>
                 <span class="text-slate-200 dark:text-slate-700">&middot;</span>
                 <span>{article.readingTime}</span>
               </div>
@@ -180,233 +146,9 @@ def embed_ticket(ticket: dict) -> list[float]:
 
         <!-- ── LEFT: ARTICLE BODY ──────────────────────────────────────────── -->
         <main class="min-w-0">
-          {Content ? (
-            /* ── MDX post body ──────────────────────────────────────────── */
-            <article class="prose-writeup max-w-[760px]">
-              <Content />
-            </article>
-          ) : (
-            /* ── Legacy inline post body ────────────────────────────────── */
-            <article class="prose-writeup max-w-[760px]">
-
-            <h2 id="background" class="text-[1.3125rem] font-bold text-slate-900 mt-0 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">Background</h2>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              Internal tooling at fast-moving companies tends to accumulate debt quickly. What starts as
-              a simple admin panel with a few SQL queries becomes a sprawling patchwork of conditionals,
-              cron jobs, and undocumented business logic. By the time your team grows past twenty engineers,
-              the cognitive overhead of understanding how the system works exceeds the time it would take
-              to rewrite it.
-            </p>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              This was exactly the situation we found ourselves in. Our customer success team relied on a
-              rules engine that processed support tickets and routed them to the correct team based on
-              severity, product area, and historical context. It worked — mostly — until it didn't.
-            </p>
-
-            <h2 id="the-problem" class="text-[1.3125rem] font-bold text-slate-900 mt-11 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">The Problem</h2>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              The rules engine had been written incrementally over two years. Nobody owned it fully.
-              The logic was spread across three services, two configuration files, and a Google Sheet
-              that one of the original engineers had built as a "temporary" mapping table in 2023.
-            </p>
-
-            <div class="flex gap-3 my-6 px-4 py-3.5 border-l-[3px] border-l-amber-400 bg-amber-50">
-              <div class="shrink-0 mt-0.5 text-amber-600">
-                <Icon name="lucide:alert-triangle" class="size-4" />
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-slate-800 mb-1 leading-[1.65]">Operational Risk</p>
-                <p class="text-sm leading-[1.65] text-slate-600 mb-0">Modifying routing rules required a full deploy cycle and touched production state
-                directly. Any misconfigured rule could silently misroute hundreds of tickets before
-                detection.</p>
-              </div>
-            </div>
-
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              The specific issues we needed to address were throughput (averaging 400 ms per classification
-              decision), accuracy (the rules engine was wrong ~12% of the time on edge cases), and
-              maintainability — no single engineer could confidently describe all the routing logic.
-            </p>
-
-            <h2 id="architecture" class="text-[1.3125rem] font-bold text-slate-900 mt-11 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">Architecture Overview</h2>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              We replaced the rules engine with a three-layer RAG pipeline. Here's the high-level
-              breakdown of how the pieces fit together:
-            </p>
-
-            <figure class="my-7">
-              <div class="flex flex-col items-center justify-center h-[200px] bg-slate-50 border border-dashed border-slate-200 text-slate-400 text-xs gap-2">
-                <Icon name="lucide:image" class="size-7 text-slate-300" />
-                <span>Architecture diagram</span>
-              </div>
-              <figcaption class="text-[0.8125rem] text-slate-400 text-center mt-2.5 leading-[1.5]">Figure 1. High-level architecture of the RAG routing pipeline.</figcaption>
-            </figure>
-
-            <h3 id="embedding-pipeline" class="text-[1.0625rem] font-semibold text-slate-800 mt-8 mb-2.5 leading-[1.35] scroll-mt-6">Embedding Pipeline</h3>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              Incoming ticket content is normalized and passed through a sentence embedding model.
-              We evaluated three candidate models before settling on a fine-tuned variant of
-              <code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">bge-small-en-v1.5</code>:
-            </p>
-            <ul class="list-disc pl-[1.375rem] mt-1 mb-5">
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0"><code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">all-MiniLM-L6-v2</code> — fast, but accuracy dropped sharply on technical jargon</li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0"><code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">bge-large-en-v1.5</code> — highest accuracy, but unacceptable latency at P99</li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0"><code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">bge-small-en-v1.5</code> (fine-tuned) — best balance of speed and domain accuracy</li>
-            </ul>
-
-            <!-- Code block 1 -->
-            <div class="my-6 border border-slate-200 overflow-hidden">
-              <div class="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-4 py-2 gap-4">
-                <span class="font-mono text-xs text-slate-500 font-medium">embed_ticket.py</span>
-                <button class="copy-btn inline-flex items-center gap-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.05em] text-slate-400 bg-transparent border-none cursor-pointer px-1.5 py-1 transition-colors hover:text-accent" data-copy-target="code-1">
-                  <Icon name="lucide:copy" class="size-3.5" />
-                  <span>Copy</span>
-                </button>
-              </div>
-              <pre id="code-1" class="m-0 overflow-x-auto bg-slate-50 px-5 py-4"><code class="font-mono text-[0.8125rem] leading-[1.7] text-slate-800 bg-transparent border-none p-0" set:html={codeEmbed}></code></pre>
-            </div>
-
-            <h3 id="retrieval-layer" class="text-[1.0625rem] font-semibold text-slate-800 mt-8 mb-2.5 leading-[1.35] scroll-mt-6">Retrieval Layer</h3>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              Once embedded, the ticket vector is queried against a PostgreSQL table using
-              <code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">pgvector</code>. The retrieval query returns the five most semantically similar
-              resolved tickets along with their routing outcomes:
-            </p>
-
-            <!-- Code block 2 -->
-            <div class="my-6 border border-slate-200 overflow-hidden">
-              <div class="flex items-center justify-between bg-slate-50 border-b border-slate-200 px-4 py-2 gap-4">
-                <span class="font-mono text-xs text-slate-500 font-medium">retrieve.sql</span>
-                <button class="copy-btn inline-flex items-center gap-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.05em] text-slate-400 bg-transparent border-none cursor-pointer px-1.5 py-1 transition-colors hover:text-accent" data-copy-target="code-2">
-                  <Icon name="lucide:copy" class="size-3.5" />
-                  <span>Copy</span>
-                </button>
-              </div>
-              <pre id="code-2" class="m-0 overflow-x-auto bg-slate-50 px-5 py-4"><code class="font-mono text-[0.8125rem] leading-[1.7] text-slate-800 bg-transparent border-none p-0">SELECT
-  id,
-  subject,
-  routing_team,
-  severity,
-  1 - (embedding &lt;=&gt; $1::vector) AS similarity
-FROM resolved_tickets
-WHERE 1 - (embedding &lt;=&gt; $1::vector) &gt; 0.72
-ORDER BY similarity DESC
-LIMIT 5;</code></pre>
-            </div>
-
-            <h3 id="generation-layer" class="text-[1.0625rem] font-semibold text-slate-800 mt-8 mb-2.5 leading-[1.35] scroll-mt-6">Generation Layer</h3>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              The top retrieved examples are formatted into a few-shot prompt and passed to the LLM.
-              The model returns a structured JSON object containing the routing decision and a
-              confidence score, which is consumed directly by the downstream routing service.
-            </p>
-
-            <!-- Callout: tip -->
-            <div class="flex gap-3 my-6 px-4 py-3.5 border-l-[3px] border-l-accent bg-blue-50">
-              <div class="shrink-0 mt-0.5 text-accent">
-                <Icon name="lucide:lightbulb" class="size-4" />
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-slate-800 mb-1 leading-[1.65]">Key Design Decision</p>
-                <p class="text-sm leading-[1.65] text-slate-600 mb-0">Using structured output (JSON mode) eliminated the need for a post-processing parser
-                and made the LLM output directly usable by downstream services without additional
-                validation layers.</p>
-              </div>
-            </div>
-
-            <h2 id="postgres-integration" class="text-[1.3125rem] font-bold text-slate-900 mt-11 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">PostgreSQL Integration</h2>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              All vector storage runs inside our existing PostgreSQL 16 instance via the
-              <code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">pgvector</code> extension. We chose this over a dedicated vector database for
-              several reasons:
-            </p>
-            <ol class="list-decimal pl-[1.375rem] mt-1 mb-5">
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Operational simplicity — one fewer infrastructure component to manage</li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Transactional consistency with the rest of the ticket data</li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Familiar tooling: <code class="font-mono text-[0.8125rem] bg-slate-100 border border-slate-200 text-accent px-1.5 py-0.5">pg_dump</code>, read replicas, and existing monitoring</li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Acceptable performance at our scale — sub-40 ms retrieval at P99</li>
-            </ol>
-
-            <!-- Table -->
-            <div class="my-6 overflow-x-auto border border-slate-200">
-              <table class="w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    <th class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-[0.04em] px-4 py-2.5 text-left border-b border-slate-200 whitespace-nowrap">Option</th>
-                    <th class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-[0.04em] px-4 py-2.5 text-left border-b border-slate-200 whitespace-nowrap">Retrieval P99</th>
-                    <th class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-[0.04em] px-4 py-2.5 text-left border-b border-slate-200 whitespace-nowrap">Operational Cost</th>
-                    <th class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-[0.04em] px-4 py-2.5 text-left border-b border-slate-200 whitespace-nowrap">Consistency</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">pgvector (PostgreSQL)</td>
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">38 ms</td>
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">Low</td>
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">Transactional</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">Pinecone</td>
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">12 ms</td>
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">High</td>
-                    <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100 align-top leading-[1.5]">Eventual</td>
-                  </tr>
-                  <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-2.5 text-slate-600 align-top leading-[1.5]">Qdrant (self-hosted)</td>
-                    <td class="px-4 py-2.5 text-slate-600 align-top leading-[1.5]">22 ms</td>
-                    <td class="px-4 py-2.5 text-slate-600 align-top leading-[1.5]">Medium</td>
-                    <td class="px-4 py-2.5 text-slate-600 align-top leading-[1.5]">Eventual</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h2 id="results" class="text-[1.3125rem] font-bold text-slate-900 mt-11 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">Results</h2>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              After three weeks of parallel running (shadow mode) and a staged rollout, we fully
-              migrated to the RAG pipeline. The results exceeded our initial projections:
-            </p>
-            <ul class="list-disc pl-[1.375rem] mt-1 mb-5">
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Classification latency dropped from <strong class="font-semibold text-slate-800">400 ms average to 160 ms average</strong></li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Accuracy on edge cases improved from <strong class="font-semibold text-slate-800">88% to 96.4%</strong></li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Every routing decision now includes full retrieval context — fully auditable</li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">Non-engineers can read and validate routing outcomes without reading code</li>
-            </ul>
-
-            <blockquote class="my-7 px-5 py-3 border-l-[3px] border-l-slate-200">
-              <p class="text-base leading-[1.7] text-slate-500 italic m-0">"The best internal tool is one your team can explain to a new hire in under five
-              minutes. The new system passes that test."</p>
-            </blockquote>
-
-            <h2 id="lessons" class="text-[1.3125rem] font-bold text-slate-900 mt-11 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">Lessons Learned</h2>
-            <p class="mb-5 leading-[1.8] text-slate-600">
-              A few things I would do differently on the next iteration:
-            </p>
-            <ol class="list-decimal pl-[1.375rem] mt-1 mb-5">
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">
-                <strong class="font-semibold text-slate-800">Start with evaluation data.</strong> We built the pipeline first and the
-                evaluation harness second. It should be the other way around.
-              </li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">
-                <strong class="font-semibold text-slate-800">Version your embeddings.</strong> When you retrain or switch models, all
-                stored vectors need to be regenerated. Plan for this from day one.
-              </li>
-              <li class="text-[0.9375rem] leading-[1.75] text-slate-600 mb-1.5 last:mb-0">
-                <strong class="font-semibold text-slate-800">Shadow mode is non-negotiable.</strong> Running the new system alongside
-                the old one before cutover caught two significant edge-case failures we hadn't
-                anticipated.
-              </li>
-            </ol>
-
-            <hr class="border-0 border-t border-slate-200 my-10" />
-
-            <p class="mb-5 text-sm text-slate-500">
-              Questions and corrections welcome — reach out on
-              <a href="#" class="text-accent underline underline-offset-2 decoration-[1px] hover:decoration-2">Twitter</a> or open an issue on <a href="#" class="text-accent underline underline-offset-2 decoration-[1px] hover:decoration-2">GitHub</a>.
-            </p>
-
+          <article class="prose-writeup max-w-[760px]">
+            <Content />
           </article>
-          )}
 
           <!-- ── PREV / NEXT NAVIGATION ──────────────────────────────────── -->
           <nav class="max-w-[760px] mt-14 pt-8 border-t border-slate-100" aria-label="Write-up navigation">

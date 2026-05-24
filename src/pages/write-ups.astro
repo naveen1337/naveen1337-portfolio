@@ -4,112 +4,50 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import ArticleItem from '../components/ArticleItem.astro';
 import { Icon } from 'astro-icon/components';
+import { getCollection } from 'astro:content';
+import config from '../data/write-ups.config.json';
 
-const categories = [
-  { name: 'All Write ups',         count: 11 },
-  { name: 'Backend Development',   count: 4  },
-  { name: 'AI / Machine Learning', count: 3  },
-  { name: 'DevOps / Systems',      count: 2  },
-  { name: 'Productivity',          count: 1  },
-  { name: 'Career',                count: 1  },
+// ── Load & sort posts ────────────────────────────────────────────────────────
+function parseDateStr(d: string): number {
+  const months: Record<string, number> = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+  };
+  const [mon, yr] = d.split(' ');
+  return new Date(parseInt(yr), months[mon] ?? 0, 1).getTime();
+}
+
+const allPosts = await getCollection('write-ups');
+const posts = allPosts.sort((a, b) => parseDateStr(b.data.date) - parseDateStr(a.data.date));
+
+// ── Compute category counts ──────────────────────────────────────────────────
+const categoryCounts = new Map<string, number>();
+posts.forEach(p => {
+  categoryCounts.set(p.data.category, (categoryCounts.get(p.data.category) ?? 0) + 1);
+});
+
+const sidebarCategories = [
+  { name: 'All Write-ups', count: posts.length },
+  ...config.categories
+    .filter(cat => categoryCounts.has(cat))
+    .map(cat => ({ name: cat, count: categoryCounts.get(cat)! })),
 ];
 
-const tags = [
-  'Node.js', 'Python', 'PostgreSQL', 'TypeScript', 'React',
-  'Docker', 'API Design', 'Performance', 'System Design',
-  'LLM', 'CI/CD', 'Architecture', 'OpenAPI', 'React Native',
-];
+// ── Compute tag counts (config tags only) ────────────────────────────────────
+const tagCounts = new Map<string, number>();
+posts.forEach(p => {
+  p.data.tags.forEach(tag => {
+    if ((config.tags as string[]).includes(tag)) {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+  });
+});
 
-const articles = [
-  {
-    slug: 'building-ai-native-internal-tools',
-    title: 'Building AI-Native Internal Tools with RAG and PostgreSQL',
-    excerpt: 'How we replaced a brittle rules engine with a retrieval-augmented generation pipeline — reducing classification latency by 60% and making routing decisions auditable by non-engineers.',
-    date: 'May 24, 2026',
-    readingTime: '12 min read',
-    category: 'AI / Machine Learning',
-  },
-  {
-    slug: 'building-scalable-apis',
-    title: 'Building Scalable APIs with Node.js and PostgreSQL',
-    excerpt: 'A deep dive into designing RESTful APIs that handle high throughput using connection pooling, query optimization, and caching strategies.',
-    date: 'May 10, 2026',
-    readingTime: '8 min read',
-    category: 'Backend Development',
-  },
-  {
-    slug: 'fine-tuning-llms',
-    title: 'Fine-Tuning LLMs for Domain-Specific Tasks',
-    excerpt: 'Practical walkthrough of fine-tuning open-source language models on proprietary datasets — covering data preparation, LoRA adapters, and evaluation pipelines.',
-    date: 'Apr 28, 2026',
-    readingTime: '12 min read',
-    category: 'AI / Machine Learning',
-  },
-  {
-    slug: 'zero-downtime-deployment-pipeline',
-    title: 'Designing a Zero-Downtime Deployment Pipeline',
-    excerpt: 'How to orchestrate rolling deployments, blue-green switches, and automated rollback using GitHub Actions and Docker Swarm.',
-    date: 'Apr 14, 2026',
-    readingTime: '10 min read',
-    category: 'DevOps / Systems',
-  },
-  {
-    slug: 'api-documentation-openapi-lsp',
-    title: 'API Documentation as Code: OpenAPI + LSP Integration',
-    excerpt: 'Generating machine-readable API docs directly from TypeScript source, with Language Server Protocol bindings for real-time IDE autocompletion and suggestions.',
-    date: 'Mar 30, 2026',
-    readingTime: '7 min read',
-    category: 'Backend Development',
-  },
-  {
-    slug: 'checklists-in-engineering',
-    title: 'The Pragmatic Case for Checklists in Engineering',
-    excerpt: 'Borrowing from aviation and surgery: why structured checklists reduce cognitive load and consistently catch silent bugs in complex deployment workflows.',
-    date: 'Mar 18, 2026',
-    readingTime: '5 min read',
-    category: 'Productivity',
-  },
-  {
-    slug: 'collaborative-filtering',
-    title: 'Collaborative Filtering at Scale: Lessons from a Recommender System',
-    excerpt: 'Building a production-grade content recommender using Euclidean distance on psychographic preference vectors — trade-offs, bottlenecks, and hard-won wins.',
-    date: 'Mar 03, 2026',
-    readingTime: '11 min read',
-    category: 'AI / Machine Learning',
-  },
-  {
-    slug: 'postgres-query-planning',
-    title: 'PostgreSQL Query Planning Demystified',
-    excerpt: 'Reading EXPLAIN ANALYZE output, identifying sequential scans, and applying partial indexes to cut query latency on tables with millions of rows.',
-    date: 'Feb 20, 2026',
-    readingTime: '9 min read',
-    category: 'Backend Development',
-  },
-  {
-    slug: 'monolith-to-microservices',
-    title: 'From Monolith to Microservices: When and Why',
-    excerpt: 'A decision framework for splitting a monolith, the hidden operational costs of distributed systems, and patterns that keep complexity manageable.',
-    date: 'Feb 06, 2026',
-    readingTime: '13 min read',
-    category: 'Backend Development',
-  },
-  {
-    slug: 'shipping-side-projects',
-    title: 'Shipping Side Projects: A Repeatable Playbook',
-    excerpt: 'The five-phase process I use to take a project from idea to deployed product in under four weeks, without scope creep or burnout.',
-    date: 'Jan 22, 2026',
-    readingTime: '6 min read',
-    category: 'Career',
-  },
-  {
-    slug: 'containerizing-react-native',
-    title: 'Containerizing a React Native Build Environment',
-    excerpt: 'Using Docker to create reproducible iOS and Android build environments, eliminating "works on my machine" failures in CI pipelines.',
-    date: 'Jan 09, 2026',
-    readingTime: '8 min read',
-    category: 'DevOps / Systems',
-  },
-];
+const sidebarTags = config.tags
+  .filter(t => tagCounts.has(t))
+  .map(t => ({ name: t, count: tagCounts.get(t)! }));
+
+const { pageSize } = config.pagination;
 ---
 
 <Layout>
@@ -121,11 +59,11 @@ const articles = [
       <div class="max-w-2xl">
         <p class="text-accent text-xs uppercase tracking-widest font-semibold m-0 mb-3">Writing</p>
         <h1 class="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-[#F3F7FF] m-0 mb-4 leading-tight">
-          All Write ups
+          All Write-ups
         </h1>
         <p class="text-secondary text-base lg:text-lg m-0 leading-relaxed">
-          Thoughts on backend engineering, distributed systems, machine learning,
-          and the craft of building software at scale.
+          Notes on software projects, book reviews, and thoughts on engineering, finance, and the
+          craft of building things.
         </p>
       </div>
     </div>
@@ -161,14 +99,14 @@ const articles = [
               </p>
               <nav aria-label="Write-up categories">
                 <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
-                  {categories.map((cat, i) => (
+                  {sidebarCategories.map((cat, i) => (
                     <li>
                       <button
                         class={[
                           'w-full flex items-center justify-between py-2 pr-3 text-sm transition-colors text-left border-l-2',
                           i === 0
                             ? 'pl-3.5 border-accent text-accent font-semibold bg-accent/5'
-                            : 'pl-4 border-transparent text-slate-700 hover:text-accent hover:bg-slate-50',
+                            : 'pl-4 border-transparent text-slate-700 dark:text-[#B7C4D8] hover:text-accent hover:bg-slate-50 dark:hover:bg-[#172033]',
                         ].join(' ')}
                         data-category-btn
                         data-active={i === 0 ? 'true' : 'false'}
@@ -177,7 +115,7 @@ const articles = [
                         <span>{cat.name}</span>
                         <span class={[
                           'text-xs font-medium px-1.5 py-0.5 border tabular-nums',
-                          i === 0 ? 'border-accent/40 text-accent' : 'border-slate-200 text-secondary',
+                          i === 0 ? 'border-accent/40 text-accent' : 'border-slate-200 dark:border-[#24324A] text-secondary',
                         ].join(' ')}>
                           {cat.count}
                         </span>
@@ -189,18 +127,26 @@ const articles = [
             </div>
 
             <!-- Tags -->
-            <div>
-              <p class="text-xs uppercase tracking-widest font-semibold text-secondary m-0 mb-3">
-                Tags
-              </p>
-              <div class="flex flex-wrap gap-1.5">
-                {tags.map((tag) => (
-                  <span class="border border-slate-200 dark:border-[#24324A] px-2.5 py-1 text-xs text-slate-600 dark:text-[#B7C4D8] hover:border-accent hover:text-accent dark:hover:border-accent dark:hover:text-accent transition-colors cursor-pointer">
-                    {tag}
-                  </span>
-                ))}
+            {sidebarTags.length > 0 && (
+              <div>
+                <p class="text-xs uppercase tracking-widest font-semibold text-secondary m-0 mb-3">
+                  Tags
+                </p>
+                <div class="flex flex-wrap gap-1.5">
+                  {sidebarTags.map((tag) => (
+                    <button
+                      class="border border-slate-200 dark:border-[#24324A] px-2.5 py-1 text-xs text-slate-600 dark:text-[#B7C4D8] hover:border-accent hover:text-accent dark:hover:border-accent dark:hover:text-accent transition-colors cursor-pointer bg-transparent"
+                      data-tag-btn
+                      data-active="false"
+                      data-tag={tag.name}
+                    >
+                      {tag.name}
+                      <span class="ml-1 opacity-50 tabular-nums">{tag.count}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         </aside>
@@ -230,7 +176,7 @@ const articles = [
                 />
               </div>
               <span id="article-count" class="text-xs text-secondary tabular-nums">
-                {articles.length} write-ups
+                {posts.length} write-ups
               </span>
             </div>
 
@@ -251,22 +197,42 @@ const articles = [
 
           <!-- Article list -->
           <div id="article-list">
-            {articles.map((article) => (
+            {posts.map((post) => (
               <ArticleItem
-                href={`/write-ups/${article.slug}`}
-                title={article.title}
-                excerpt={article.excerpt}
-                date={article.date}
-                readingTime={article.readingTime}
-                category={article.category}
+                href={`/write-ups/${post.id}`}
+                title={post.data.title}
+                excerpt={post.data.excerpt}
+                date={post.data.date}
+                readingTime={post.data.readingTime}
+                category={post.data.category}
+                tags={post.data.tags}
               />
             ))}
 
             <!-- Empty state -->
             <div id="empty-state" class="hidden py-16 text-center">
               <Icon name="lucide:file-search" class="size-10 text-secondary mx-auto mb-3" />
-              <p class="text-secondary text-sm m-0">No write-ups match your search.</p>
+              <p class="text-secondary text-sm m-0">No write-ups match your filters.</p>
             </div>
+          </div>
+
+          <!-- Pagination -->
+          <div id="pagination" class="hidden items-center justify-between mt-8 pt-6 border-t border-slate-200 dark:border-[#24324A]" data-page-size={pageSize}>
+            <button
+              id="prev-page"
+              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-[#24324A] text-slate-700 dark:text-[#B7C4D8] hover:border-accent hover:text-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Icon name="lucide:arrow-left" class="size-3.5" />
+              Newer
+            </button>
+            <span id="page-info" class="text-xs text-secondary tabular-nums">Page 1 of 1</span>
+            <button
+              id="next-page"
+              class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-[#24324A] text-slate-700 dark:text-[#B7C4D8] hover:border-accent hover:text-accent transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Older
+              <Icon name="lucide:arrow-right" class="size-3.5" />
+            </button>
           </div>
 
         </div>
@@ -278,8 +244,16 @@ const articles = [
 </Layout>
 
 <script>
+  // ── Date parsing helper ──────────────────────────────────────────────────
+  const MONTHS = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+  const pageSize = parseInt(document.getElementById('pagination')?.dataset.pageSize ?? '5', 10);
+  function parseDateStr(d) {
+    const [mon, yr] = d.split(' ');
+    return new Date(parseInt(yr), MONTHS[mon] ?? 0, 1).getTime();
+  }
+
   // ── Mobile filter toggle ─────────────────────────────────────────────────
-  const filterToggle  = document.getElementById('filter-toggle') as HTMLButtonElement | null;
+  const filterToggle  = document.getElementById('filter-toggle');
   const filterPanel   = document.getElementById('filter-panel');
   const filterChevron = document.getElementById('filter-chevron');
 
@@ -290,61 +264,158 @@ const articles = [
     filterToggle.setAttribute('aria-expanded', String(!isOpen));
   });
 
-  // ── Filtering state ──────────────────────────────────────────────────────
-  const articleEls  = Array.from(document.querySelectorAll<HTMLElement>('[data-article]'));
-  const countEl     = document.getElementById('article-count');
-  const emptyState  = document.getElementById('empty-state');
-  const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+  // ── State ────────────────────────────────────────────────────────────────
+  const articleEls   = Array.from(document.querySelectorAll('[data-article]'));
+  const countEl      = document.getElementById('article-count');
+  const emptyState   = document.getElementById('empty-state');
+  const searchInput  = document.getElementById('search-input');
+  const paginationEl = document.getElementById('pagination');
+  const prevBtn      = document.getElementById('prev-page');
+  const nextBtn      = document.getElementById('next-page');
+  const pageInfoEl   = document.getElementById('page-info');
 
-  let activeCategory = 'All Write ups';
+  // Capture default (newest-first) order for sort resets
+  const defaultOrder = [...articleEls];
+
+  let activeCategory = 'All Write-ups';
+  let activeTags     = new Set();
   let searchQuery    = '';
+  let currentPage    = 1;
 
-  function applyFilters() {
-    let visible = 0;
-    articleEls.forEach((el) => {
-      const titleMatch    = !searchQuery || (el.dataset.title   ?? '').includes(searchQuery);
-      const excerptMatch  = !searchQuery || (el.dataset.excerpt ?? '').includes(searchQuery);
-      const categoryMatch = activeCategory === 'All Write ups' || el.dataset.category === activeCategory;
-      const show = (titleMatch || excerptMatch) && categoryMatch;
-      el.style.display = show ? '' : 'none';
-      if (show) visible++;
+  // ── Filtering ────────────────────────────────────────────────────────────
+  function getFiltered() {
+    return articleEls.filter(el => {
+      const catMatch  = activeCategory === 'All Write-ups' || el.dataset.category === activeCategory;
+      const tagMatch  = activeTags.size === 0 ||
+        [...activeTags].some(t => (el.dataset.tags ?? '').split(',').includes(t));
+      const q         = searchQuery;
+      const textMatch = !q ||
+        (el.dataset.title ?? '').includes(q) || (el.dataset.excerpt ?? '').includes(q);
+      return catMatch && tagMatch && textMatch;
     });
-    if (countEl) countEl.textContent = `${visible} write-up${visible !== 1 ? 's' : ''}`;
-    if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
   }
 
-  // ── Category buttons ─────────────────────────────────────────────────────
-  document.querySelectorAll<HTMLElement>('[data-category-btn]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      activeCategory = btn.dataset.category ?? 'All Write ups';
+  // ── Render page ──────────────────────────────────────────────────────────
+  function renderPage() {
+    const filtered   = getFiltered();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-      document.querySelectorAll<HTMLElement>('[data-category-btn]').forEach((b) => {
+    const start = (currentPage - 1) * pageSize;
+    const end   = start + pageSize;
+
+    articleEls.forEach(el => { el.style.display = 'none'; });
+    filtered.slice(start, end).forEach(el => { el.style.display = ''; });
+
+    if (countEl) countEl.textContent = `${filtered.length} write-up${filtered.length !== 1 ? 's' : ''}`;
+    if (emptyState) emptyState.classList.toggle('hidden', filtered.length > 0);
+
+    if (totalPages > 1) {
+      paginationEl?.classList.remove('hidden');
+      paginationEl?.classList.add('flex');
+    } else {
+      paginationEl?.classList.add('hidden');
+      paginationEl?.classList.remove('flex');
+    }
+    if (prevBtn) prevBtn.disabled = currentPage <= 1;
+    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    if (pageInfoEl) pageInfoEl.textContent = `Page ${currentPage} of ${totalPages}`;
+  }
+
+  // ── Category filter ───────────────────────────────────────────────────────
+  document.querySelectorAll('[data-category-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.category ?? 'All Write-ups';
+      currentPage = 1;
+
+      document.querySelectorAll('[data-category-btn]').forEach((b) => {
         const active = b.dataset.category === activeCategory;
-        // Update data-active for CSS-driven dark mode targeting
         b.dataset.active = String(active);
         b.className = [
           'w-full flex items-center justify-between py-2 pr-3 text-sm transition-colors text-left border-l-2',
           active
             ? 'pl-3.5 border-accent text-accent font-semibold bg-accent/5'
-            : 'pl-4 border-transparent text-slate-700 hover:text-accent hover:bg-slate-50',
+            : 'pl-4 border-transparent text-slate-700 dark:text-[#B7C4D8] hover:text-accent hover:bg-slate-50 dark:hover:bg-[#172033]',
         ].join(' ');
 
-        const badge = b.querySelector<HTMLElement>('span:last-child');
+        const badge = b.querySelector('span:last-child');
         if (badge) {
           badge.className = [
             'text-xs font-medium px-1.5 py-0.5 border tabular-nums',
-            active ? 'border-accent/40 text-accent' : 'border-slate-200 text-secondary',
+            active ? 'border-accent/40 text-accent' : 'border-slate-200 dark:border-[#24324A] text-secondary',
           ].join(' ');
         }
       });
 
-      applyFilters();
+      renderPage();
+    });
+  });
+
+  // ── Tag filter ────────────────────────────────────────────────────────────
+  document.querySelectorAll('[data-tag-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag ?? '';
+      if (activeTags.has(tag)) {
+        activeTags.delete(tag);
+        btn.dataset.active = 'false';
+        btn.className = 'border border-slate-200 dark:border-[#24324A] px-2.5 py-1 text-xs text-slate-600 dark:text-[#B7C4D8] hover:border-accent hover:text-accent dark:hover:border-accent dark:hover:text-accent transition-colors cursor-pointer bg-transparent';
+      } else {
+        activeTags.add(tag);
+        btn.dataset.active = 'true';
+        btn.className = 'border border-accent px-2.5 py-1 text-xs text-accent transition-colors cursor-pointer bg-accent/5';
+      }
+      currentPage = 1;
+      renderPage();
     });
   });
 
   // ── Search ───────────────────────────────────────────────────────────────
   searchInput?.addEventListener('input', (e) => {
-    searchQuery = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    applyFilters();
+    searchQuery = e.target.value.toLowerCase().trim();
+    currentPage = 1;
+    renderPage();
   });
+
+  // ── Sort ─────────────────────────────────────────────────────────────────
+  document.getElementById('sort-select')?.addEventListener('change', (e) => {
+    const order     = e.target.value;
+    const container = document.getElementById('article-list');
+    if (!container) return;
+
+    if (order === 'latest') {
+      defaultOrder.forEach(el => container.insertBefore(el, emptyState));
+      articleEls.length = 0;
+      articleEls.push(...defaultOrder);
+    } else if (order === 'oldest') {
+      const rev = [...defaultOrder].reverse();
+      rev.forEach(el => container.insertBefore(el, emptyState));
+      articleEls.length = 0;
+      articleEls.push(...rev);
+    } else if (order === 'reading-time') {
+      const byTime = [...articleEls].sort(
+        (a, b) => parseInt(a.dataset.readingTime ?? '0') - parseInt(b.dataset.readingTime ?? '0')
+      );
+      byTime.forEach(el => container.insertBefore(el, emptyState));
+      articleEls.length = 0;
+      articleEls.push(...byTime);
+    }
+    currentPage = 1;
+    renderPage();
+  });
+
+  // ── Pagination buttons ────────────────────────────────────────────────────
+  prevBtn?.addEventListener('click', () => {
+    currentPage--;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  nextBtn?.addEventListener('click', () => {
+    currentPage++;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ── Initial render ────────────────────────────────────────────────────────
+  renderPage();
 </script>

@@ -7,6 +7,7 @@ const writeUps = defineCollection({
   schema: z.object({
     title: z.string(),
     subtitle: z.string(),
+    excerpt: z.string(),
     category: z.string(),
     date: z.string(),
     readingTime: z.string(),
@@ -15,29 +16,9 @@ const writeUps = defineCollection({
       initials: z.string(),
     }),
     tags: z.array(z.string()),
-    prev: z
-      .object({
-        slug: z.string(),
-        title: z.string(),
-      })
-      .optional(),
-    next: z
-      .object({
-        slug: z.string(),
-        title: z.string(),
-      })
-      .optional(),
-    related: z
-      .array(
-        z.object({
-          title: z.string(),
-          description: z.string(),
-          readingTime: z.string(),
-          category: z.string(),
-          href: z.string(),
-        })
-      )
-      .optional(),
+    // Array of sibling post IDs (filename without extension) — auto-resolved to full post data
+    related: z.array(z.string()).optional(),
+    // Explicit ToC; when omitted, generated from MDX headings automatically
     toc: z
       .array(
         z.object({

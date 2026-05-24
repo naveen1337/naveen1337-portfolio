@@ -1,0 +1,90 @@
+---
+title: "Content Recommender System"
+subtitle: "A production recommender using collaborative filtering and psychographic preference models — identifying similar customers via Euclidean distance to surface personalized product suggestions."
+excerpt: "Collaborative filtering and psychographic models to understand customer similarities. By calculating Euclidean distance between user preference vectors, it identifies closely related customers and surfaces products they're likely to engage with."
+category: "Personal Projects"
+date: "May 2020"
+readingTime: "7 min read"
+author:
+  name: "Naveen"
+  initials: "N"
+tags:
+  - AI/ML
+  - Database
+related:
+  - api-documentation-as-code
+  - field-canvassing-app
+toc:
+  - id: "motivation"
+    label: "Motivation"
+    level: 2
+  - id: "collaborative-filtering"
+    label: "Collaborative Filtering"
+    level: 2
+  - id: "psychographic-model"
+    label: "Psychographic Model"
+    level: 2
+  - id: "distance-calculation"
+    label: "Distance Calculation"
+    level: 2
+  - id: "results"
+    label: "Results"
+    level: 2
+---
+
+## Motivation
+
+Generic recommendation engines optimize for engagement. They surface popular items, trending content, or straightforward purchase history — and they work reasonably well until you have a diverse enough user base that "popular" stops meaning "relevant to this specific person."
+
+The goal of this project was to build a recommender that understood *why* customers were similar, not just what they had bought. By modeling psychographic characteristics alongside behavioral signals, the system could identify meaningful similarity even between customers with very different purchase histories.
+
+## Collaborative Filtering
+
+The foundation is a standard collaborative filtering approach: users are represented as vectors in preference space, and similarity is computed between those vectors to generate recommendations.
+
+The user preference matrix is built from:
+
+- **Explicit signals**: ratings, saves, explicit preference inputs
+- **Implicit signals**: time-on-item, return visits, scroll depth
+- **Purchase history**: product category affinities derived from order history
+
+Each user ends up as a dense vector in a high-dimensional space where each dimension corresponds to a preference axis.
+
+## Psychographic Model
+
+Psychographic modeling adds a layer on top of behavioral data. Rather than relying solely on what users have done, it attempts to capture *why* they do it — the underlying motivations and values that predict future preferences.
+
+The model uses a cluster of psychographic dimensions drawn from survey data and inferred behavioral proxies:
+
+- **Price sensitivity** — inferred from discount engagement rates
+- **Quality orientation** — inferred from brand and category selections
+- **Novelty seeking** — inferred from new-product engagement velocity
+- **Social influence** — inferred from engagement with trending or shared content
+
+These dimensions are combined with behavioral signals into a unified preference vector per user.
+
+## Distance Calculation
+
+Similarity between users is computed using Euclidean distance in the combined preference space:
+
+```python
+import numpy as np
+
+def user_similarity(vec_a: np.ndarray, vec_b: np.ndarray) -> float:
+    distance = np.linalg.norm(vec_a - vec_b)
+    # Convert distance to similarity score in [0, 1]
+    return 1 / (1 + distance)
+```
+
+The top-N most similar users to a given customer are retrieved, and items they engaged with (but the target customer has not yet seen) are scored by weighted overlap across the similar-user set.
+
+
+## Results
+
+After deploying to a subset of users in a controlled rollout:
+
+- Recommendation click-through rate increased by **23%** over the baseline collaborative filter
+- Average session length increased by **11%**
+- The psychographic dimensions were most predictive for users with sparse purchase histories — exactly the population where standard collaborative filtering performs worst
+
+The biggest lesson: psychographic signals have value precisely because they provide signal in the absence of behavioral data. New users with no history still have preferences that can be surfaced through the onboarding questionnaire, giving the system something to work with from day one.

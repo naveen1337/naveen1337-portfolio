@@ -1,0 +1,77 @@
+---
+title: "Field Canvassing and Survey Application"
+subtitle: "A geo-bounded volunteer coordination platform for a U.S. territory — powered by Mapsly and GeoJSON boundaries to guide 1,000+ volunteers through structured, area-specific data collection."
+excerpt: "A canvassing survey system for a U.S. territory enabling volunteer onboarding, group assignment, and guided data collection. Built with FastAPI, React Native, and Mapsly-generated GeoJSON boundaries to accurately coordinate 1,000+ volunteers across geographic areas."
+category: "Personal Projects"
+date: "Jan 2022"
+readingTime: "5 min read"
+author:
+  name: "Naveen"
+  initials: "N"
+tags:
+  - React Native
+  - Python
+  - PostgreSQL
+  - Infrastructure
+related:
+  - food-delivery-app
+  - content-recommender-system
+toc:
+  - id: "background"
+    label: "Background"
+    level: 2
+  - id: "tech-stack"
+    label: "Tech Stack"
+    level: 2
+  - id: "map-integration"
+    label: "Map Integration"
+    level: 2
+  - id: "challenges"
+    label: "Challenges"
+    level: 2
+  - id: "outcome"
+    label: "Outcome"
+    level: 2
+---
+
+## Background
+
+Large-scale field operations — canvassing campaigns, census surveys, community outreach — share a common problem: coordinating hundreds of volunteers across geographic areas while maintaining data consistency. Manual coordination through spreadsheets breaks down quickly beyond a few dozen people.
+
+This project was built for a U.S. territory running a structured canvassing campaign. The goal was to replace a fragile spreadsheet workflow with a purpose-built platform that handled volunteer onboarding, group assignment, and guided data collection — all within clearly defined geographic boundaries.
+
+## Tech Stack
+
+The platform spans three surfaces built on a shared backend:
+
+**Backend — Python FastAPI**
+A FastAPI service handles volunteer authentication, survey submission, group assignment, and all spatial queries. FastAPI's async request handling kept response times low even during peak submission windows with large volunteer groups active simultaneously.
+
+**Frontend — React Native (iOS & Android)**
+Volunteers use a React Native app on both iOS and Android. A single codebase covers both platforms, which kept the mobile development effort manageable while ensuring a consistent experience across devices in the field.
+
+**Admin & Web Onboarding — React**
+Campaign coordinators and volunteer onboarding use a React web application. The admin dashboard provides real-time visibility into coverage progress, group assignments, and submission status across all active areas.
+
+**Infrastructure — PostgreSQL Managed Cluster on DigitalOcean**
+The database runs on a managed PostgreSQL cluster on DigitalOcean. The managed cluster handled automated backups and failover without adding operational overhead — important for a time-sensitive campaign where downtime was not an option.
+
+## Map Integration
+
+The map layer is built on [Mapsly](https://mapsly.com), which was used to generate the organization's geographic boundaries and produce the GeoJSON that drives the application's geo-bounded logic.
+
+Mapsly made it straightforward to define precise territory boundaries for the campaign — boundaries that would have been tedious to produce manually from raw census data. The resulting GeoJSON is loaded into the platform to:
+
+- Render interactive boundary overlays on the volunteer map
+- Constrain survey submissions to the correct geographic area
+- Power coordinator progress views broken down by zone
+
+## Challenges
+
+The most significant challenge was offline-first data capture. Volunteers frequently moved into areas with poor connectivity. The mobile app queues survey submissions locally and syncs when a connection becomes available, ensuring no data is lost mid-session.
+
+A second challenge was scaling the boundary rendering on lower-end Android devices. Large GeoJSON files with high polygon detail caused noticeable lag on the map. Simplifying polygon geometry at export time in Mapsly — reducing vertex count without meaningfully changing boundary shape — resolved the performance issue without affecting accuracy.
+
+## Outcome
+
+Over **1,000 volunteers** joined and used the platform across the campaign. The combination of Mapsly-generated boundaries and in-app map guidance eliminated address-level ambiguity — volunteers always knew exactly which zone they were assigned to and which households remained uncollected. Data accuracy improved substantially over the previous spreadsheet approach, and coordinators could monitor and react to coverage gaps in real time.
