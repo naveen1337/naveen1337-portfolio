@@ -2,17 +2,6 @@
 
 ---
 
-### Design Tokens (globals) — CURRENT
-
-```
-Background: #ffffff (page), #f8fafc (cards)
-Accent: #0165fd (blue)
-Text: #0f172a / slate-900 (primary), #64748b (secondary)
-Border: slate-200 (light gray — all borders sharp, no rounding)
-Font: Montserrat (400 / 600 / 700) via Google Fonts
-```
----
-
 ### Component Tree — CURRENT
 
 ```
