@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ── Enable class-based dark mode ───────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Design tokens ──────────────────────────────────────────────────────── */
 @theme {
   --color-page:      #ffffff;
@@ -8,4 +11,222 @@
   --color-secondary: #64748b;
   --font-sans: "Montserrat", "Segoe UI", sans-serif;
 }
+
+/* ── Dark mode token overrides ──────────────────────────────────────────── */
+html.dark {
+  --color-page:      #0A0F1C;
+  --color-card:      #111827;
+  --color-secondary: #B7C4D8;
+}
+
+/* ── Global dark mode utility overrides ─────────────────────────────────── */
+/* Covers hardcoded Tailwind colors used throughout components              */
+html.dark .border-slate-100  { border-color: #1B263B; }
+html.dark .border-slate-200  { border-color: #24324A; }
+html.dark .border-slate-300  { border-color: #24324A; }
+html.dark .border-blue-200   { border-color: #24324A; }
+html.dark .divide-slate-200  { --tw-divide-color: #24324A; }
+
+html.dark .bg-white          { background-color: #111827; }
+html.dark .bg-slate-50       { background-color: #172033; }
+html.dark .bg-slate-100      { background-color: #172033; }
+html.dark .bg-amber-50       { background-color: rgba(245, 158, 11, 0.08); }
+html.dark .bg-blue-50        { background-color: rgba(1, 101, 253, 0.08); }
+
+html.dark .text-slate-900    { color: #F3F7FF; }
+html.dark .text-slate-800    { color: #F3F7FF; }
+html.dark .text-slate-700    { color: #B7C4D8; }
+html.dark .text-slate-600    { color: #B7C4D8; }
+html.dark .text-gray-800     { color: #B7C4D8; }
+html.dark .text-slate-500    { color: #6F819B; }
+html.dark .text-slate-400    { color: #6F819B; }
+html.dark .text-slate-300    { color: #24324A; }
+html.dark .text-slate-200    { color: #1B263B; }
+
+/* Hover backgrounds */
+html.dark .hover\:bg-slate-50:hover    { background-color: #172033; }
+html.dark .hover\:bg-slate-50\/60:hover { background-color: rgba(23, 32, 51, 0.6); }
+
+/* Form elements */
+html.dark select {
+  background-color: #111827;
+  color: #F3F7FF;
+  border-color: #24324A;
+}
+html.dark select option { background-color: #111827; }
+html.dark input[type="search"] {
+  background-color: #111827;
+  color: #F3F7FF;
+  border-color: #24324A;
+}
+html.dark input[type="search"]::placeholder { color: #6F819B; }
+
+/* Dynamic category buttons (write-ups sidebar) */
+html.dark [data-category-btn] { color: #B7C4D8; }
+html.dark [data-category-btn]:hover { background-color: #172033; color: #0165FD; }
+html.dark [data-category-btn][data-active="true"] { color: #0165FD; background-color: rgba(1,101,253,0.08); }
+html.dark [data-category-btn] span:last-child { border-color: #24324A; color: #6F819B; }
+html.dark [data-category-btn][data-active="true"] span:last-child { border-color: rgba(1,101,253,0.4); color: #0165FD; }
+
+/* ── MDX prose styles (matches hand-crafted article HTML) ───────────────── */
+.prose-writeup h2 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  scroll-margin-top: 1.5rem;
+}
+.prose-writeup h2:first-child { margin-top: 0; }
+
+.prose-writeup h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 2rem;
+  margin-bottom: 0.625rem;
+  line-height: 1.35;
+  scroll-margin-top: 1.5rem;
+}
+
+.prose-writeup p {
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.85;
+  color: #334155;
+}
+
+.prose-writeup a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.prose-writeup a:hover { text-decoration-thickness: 2px; }
+
+.prose-writeup ul {
+  list-style-type: disc;
+  padding-left: 1.375rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+.prose-writeup ol {
+  list-style-type: decimal;
+  padding-left: 1.375rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+.prose-writeup li {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #334155;
+  margin-bottom: 0.375rem;
+}
+.prose-writeup li:last-child { margin-bottom: 0; }
+
+.prose-writeup code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: var(--color-accent);
+  padding: 0.125rem 0.375rem;
+}
+
+.prose-writeup pre {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem 1.25rem;
+}
+.prose-writeup pre code {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #1e293b;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.prose-writeup blockquote {
+  margin: 1.75rem 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 3px solid #e2e8f0;
+}
+.prose-writeup blockquote p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+}
+
+.prose-writeup hr {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 2.5rem 0;
+}
+
+.prose-writeup strong { font-weight: 600; color: #1e293b; }
+
+.prose-writeup table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  margin: 1.5rem 0;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+  display: block;
+}
+.prose-writeup th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.625rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.prose-writeup td {
+  padding: 0.625rem 1rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.prose-writeup tr:hover td { background: #f8fafc; }
+.prose-writeup tr:last-child td { border-bottom: none; }
+
+/* ── Dark mode prose overrides ──────────────────────────────────────────── */
+html.dark .prose-writeup h2 { color: #F3F7FF; }
+html.dark .prose-writeup h3 { color: #F3F7FF; }
+html.dark .prose-writeup p  { color: #B7C4D8; }
+html.dark .prose-writeup li { color: #B7C4D8; }
+html.dark .prose-writeup strong { color: #F3F7FF; }
+
+html.dark .prose-writeup code {
+  background: #111827;
+  border-color: #24324A;
+}
+html.dark .prose-writeup pre {
+  background: #111827;
+  border-color: #24324A;
+}
+html.dark .prose-writeup pre code { color: #B7C4D8; }
+
+html.dark .prose-writeup blockquote { border-left-color: #24324A; }
+html.dark .prose-writeup blockquote p { color: #6F819B; }
+
+html.dark .prose-writeup hr { border-top-color: #1B263B; }
+
+html.dark .prose-writeup table  { border-color: #24324A; }
+html.dark .prose-writeup th     { background: #111827; color: #6F819B; border-bottom-color: #24324A; }
+html.dark .prose-writeup td     { color: #B7C4D8; border-bottom-color: #1B263B; }
+html.dark .prose-writeup tr:hover td { background: #172033; }
 

@@ -1,0 +1,293 @@
+---
+title: "Building Scalable APIs with Node.js and PostgreSQL"
+subtitle: "A deep dive into designing RESTful APIs that handle high throughput using connection pooling, query optimization, and caching strategies."
+category: "Backend Development"
+date: "May 10, 2026"
+readingTime: "8 min read"
+author:
+  name: "Naveen"
+  initials: "N"
+tags:
+  - Node.js
+  - PostgreSQL
+  - TypeScript
+  - API Design
+  - Performance
+  - Architecture
+prev:
+  slug: "building-ai-native-internal-tools"
+  title: "Building AI-Native Internal Tools with RAG and PostgreSQL"
+next:
+  slug: "zero-downtime-deployment-pipeline"
+  title: "Designing a Zero-Downtime Deployment Pipeline"
+related:
+  - title: "PostgreSQL Query Planning Demystified"
+    description: "Reading EXPLAIN ANALYZE output and applying partial indexes to cut query latency at scale."
+    readingTime: "9 min"
+    category: "Backend"
+    href: "/write-ups/postgres-query-planning"
+  - title: "Designing a Zero-Downtime Deployment Pipeline"
+    description: "Rolling deployments, blue-green switches, and automated rollback using GitHub Actions."
+    readingTime: "10 min"
+    category: "DevOps"
+    href: "/write-ups/zero-downtime-deployment-pipeline"
+  - title: "From Monolith to Microservices: When and Why"
+    description: "A decision framework for splitting a monolith and the hidden costs of distributed systems."
+    readingTime: "13 min"
+    category: "Backend"
+    href: "/write-ups/monolith-to-microservices"
+toc:
+  - id: "the-foundation"
+    label: "The Foundation"
+    level: 2
+  - id: "connection-pooling"
+    label: "Connection Pooling"
+    level: 2
+  - id: "pool-configuration"
+    label: "Pool Configuration"
+    level: 3
+  - id: "query-optimization"
+    label: "Query Optimization"
+    level: 2
+  - id: "index-strategy"
+    label: "Index Strategy"
+    level: 3
+  - id: "avoiding-n1-queries"
+    label: "Avoiding N+1 Queries"
+    level: 3
+  - id: "caching-layer"
+    label: "Caching Layer"
+    level: 2
+  - id: "rate-limiting"
+    label: "Rate Limiting"
+    level: 2
+  - id: "results"
+    label: "Results"
+    level: 2
+  - id: "lessons-learned"
+    label: "Lessons Learned"
+    level: 2
+---
+
+## The Foundation
+
+Every high-throughput API has the same hidden bottleneck: the database. You can scale your Node.js
+process horizontally with ease — spin up more containers, add a load balancer, done. But your
+PostgreSQL instance is a shared, stateful resource. If you do not design explicitly around that
+constraint from the start, you will hit it at the worst possible time.
+
+This post covers the patterns we applied to bring a Node.js + PostgreSQL API from handling
+~200 requests per second to reliably serving 2,000 RPS at P99 under 80 ms — without changing
+the underlying hardware.
+
+## Connection Pooling
+
+PostgreSQL uses one OS process per connection. At 100+ concurrent connections, the context-switching
+overhead alone accounts for 20–30 ms of latency on a mid-tier server. The fix is a connection pool:
+a fixed set of long-lived database connections shared across your application processes.
+
+We use [pg-pool](https://github.com/brianc/node-postgres/tree/master/packages/pg-pool) via
+`node-postgres`. The critical insight is that the pool size should match your PostgreSQL server's
+capacity, not your Node.js concurrency.
+
+### Pool Configuration
+
+A common mistake is setting `max` to a large number like 100, assuming more connections means more
+throughput. In practice, the optimal pool size is:
+
+```
+pool_size = (core_count × 2) + effective_spindle_count
+```
+
+For a 4-core server with SSDs, that works out to roughly **9–10 connections**. We run 3 Node.js
+replicas each with a pool of 10, totalling 30 connections — well within our PostgreSQL `max_connections`
+of 200 and avoiding contention.
+
+```typescript
+import { Pool } from 'pg';
+
+export const pool = new Pool({
+  host:            process.env.PGHOST,
+  port:            Number(process.env.PGPORT ?? 5432),
+  database:        process.env.PGDATABASE,
+  user:            process.env.PGUSER,
+  password:        process.env.PGPASSWORD,
+  max:             10,          // connections per process
+  idleTimeoutMillis: 30_000,    // release idle connections after 30 s
+  connectionTimeoutMillis: 2_000, // fail fast if pool is exhausted
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => pool.end());
+```
+
+> **Never** create a new `Pool` per request. One pool per process, created at startup.
+
+## Query Optimization
+
+Connection pooling removes the connection overhead, but slow queries will still bottleneck you.
+The two highest-leverage techniques are index strategy and eliminating N+1 queries.
+
+### Index Strategy
+
+`EXPLAIN ANALYZE` is your best tool. Run it on every query that touches a table with more than
+50,000 rows. Look for **sequential scans** on large tables — they are almost always a sign that
+an index is missing or not being used.
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT u.id, u.email, COUNT(o.id) AS order_count
+FROM   users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE  u.created_at > NOW() - INTERVAL '30 days'
+  AND  u.plan = 'pro'
+GROUP BY u.id, u.email;
+```
+
+For this query, a **partial composite index** on `users` reduces scan cost by ~95%:
+
+```sql
+-- Only indexes the rows we actually query
+CREATE INDEX idx_users_pro_recent
+  ON users (created_at DESC)
+  WHERE plan = 'pro';
+```
+
+Partial indexes are underused. If you frequently filter on a low-cardinality column like `plan = 'pro'`,
+a partial index gives you B-tree speed with a fraction of the storage and write overhead.
+
+### Avoiding N+1 Queries
+
+N+1 is the most common source of performance regressions in APIs. It looks like this:
+
+```typescript
+// ❌ N+1: one query for the list, N queries for each user's orders
+const users = await db.query('SELECT * FROM users LIMIT 50');
+for (const user of users.rows) {
+  user.orders = await db.query(
+    'SELECT * FROM orders WHERE user_id = $1',
+    [user.id]
+  );
+}
+```
+
+The fix is a single JOIN query or a bulk lookup:
+
+```typescript
+// ✅ Two queries total regardless of result size
+const users = await db.query('SELECT * FROM users LIMIT 50');
+const userIds = users.rows.map(u => u.id);
+
+const orders = await db.query(
+  'SELECT * FROM orders WHERE user_id = ANY($1::int[])',
+  [userIds]
+);
+
+// Group in JS — O(n) with a Map
+const ordersByUser = new Map<number, typeof orders.rows>();
+for (const order of orders.rows) {
+  const list = ordersByUser.get(order.user_id) ?? [];
+  list.push(order);
+  ordersByUser.set(order.user_id, list);
+}
+
+for (const user of users.rows) {
+  user.orders = ordersByUser.get(user.id) ?? [];
+}
+```
+
+## Caching Layer
+
+Not every request needs to hit the database. For read-heavy resources that change infrequently
+(user profiles, product listings, configuration), an in-process or Redis cache reduces database
+load dramatically.
+
+We use a simple **stale-while-revalidate** pattern with Redis:
+
+```typescript
+const CACHE_TTL_SECONDS = 60;
+
+export async function getCachedOrFetch<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+): Promise<T> {
+  const cached = await redis.get(key);
+  if (cached) return JSON.parse(cached) as T;
+
+  const fresh = await fetchFn();
+  // Fire-and-forget cache write — never block the response
+  redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(fresh)).catch(() => {});
+  return fresh;
+}
+```
+
+Cache keys should include the API version and any relevant parameters:
+
+```typescript
+const profile = await getCachedOrFetch(
+  `v2:user:${userId}:profile`,
+  () => db.query('SELECT ...', [userId]).then(r => r.rows[0]),
+);
+```
+
+## Rate Limiting
+
+Without rate limiting, a single misbehaving client can exhaust your connection pool and cause
+cascading failures for all other users. We apply rate limiting at two levels:
+
+1. **Per-IP limits** at the edge (nginx / CDN) — fast, no application involvement
+2. **Per-user token-bucket limits** in the application — accurate, account-aware
+
+A token-bucket in Redis is three commands and atomic:
+
+```typescript
+async function isAllowed(userId: string, rps: number): Promise<boolean> {
+  const key = `ratelimit:${userId}`;
+  const now = Date.now();
+
+  const [count] = await redis.pipeline()
+    .zremrangebyscore(key, '-inf', now - 1_000)   // drop old entries
+    .zadd(key, now, `${now}-${Math.random()}`)     // add current request
+    .zcard(key)                                    // count in window
+    .expire(key, 2)                                // auto-expire key
+    .exec() as [null, null, [null, number], null];
+
+  return count[1] <= rps;
+}
+```
+
+## Results
+
+After applying connection pooling, query optimization, and caching across our main API surface:
+
+| Metric                  | Before    | After     | Change    |
+|-------------------------|-----------|-----------|-----------|
+| Throughput (RPS)        | 200       | 2,000     | +900%     |
+| P99 latency             | 480 ms    | 78 ms     | −84%      |
+| DB connection count     | 350       | 30        | −91%      |
+| Cache hit rate (reads)  | 0%        | 68%       | —         |
+
+The single biggest win was connection pooling — it alone accounted for roughly half the latency
+reduction. Query optimization and caching split the remainder.
+
+## Lessons Learned
+
+1. **Measure before optimizing.** Add `pg_stat_statements` to your PostgreSQL instance and review
+   it weekly. The slow queries will surprise you.
+
+2. **Keep pools small and intentional.** More connections is not always better. Match your pool
+   size to the server's actual capacity.
+
+3. **Partial indexes are free money.** If you have a common `WHERE plan = 'pro'` clause, a partial
+   index costs almost nothing to maintain and dramatically narrows scans.
+
+4. **Rate limiting is a reliability feature, not a monetisation tool.** Add it before you need it —
+   a single traffic spike without it can take down your entire API.
+
+5. **Cache writes should never block responses.** Fire-and-forget your cache writes. A Redis
+   timeout should never add latency to a user-facing request.
+
+---
+
+Questions or corrections? Reach out on
+[Twitter](https://twitter.com) or open an issue on [GitHub](https://github.com).

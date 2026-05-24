@@ -3,25 +3,56 @@ import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import { Icon } from 'astro-icon/components';
+import { getCollection, render } from 'astro:content';
 
-export function getStaticPaths() {
-  return [
-    { params: { slug: 'building-ai-native-internal-tools' } },
+export async function getStaticPaths() {
+  // MDX-backed posts from the content collection
+  const collectionPosts = await getCollection('write-ups');
+  const collectionPaths = collectionPosts.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+
+  // Legacy inline posts (hardcoded HTML in this template)
+  const legacyPaths = [
+    { params: { slug: 'building-ai-native-internal-tools' }, props: { entry: null } },
   ];
+
+  return [...collectionPaths, ...legacyPaths];
 }
 
-// ── Demo article data (replace with a real data source) ──────────────────────
-const article = {
-  title:       'Building AI-Native Internal Tools with RAG and PostgreSQL',
-  subtitle:    'How we replaced a brittle rules engine with a retrieval-augmented generation pipeline — reducing classification latency by 60% and making routing decisions fully auditable by non-engineers.',
-  category:    'AI / ML',
-  date:        'May 10, 2026',
-  readingTime: '12 min read',
-  author:      { name: 'Naveen', initials: 'N' },
-  tags:        ['AI', 'RAG', 'PostgreSQL', 'Docker', 'Python', 'Embeddings', 'LLM'],
-};
+const { entry } = Astro.props;
 
-const toc = [
+// ── MDX post: render content and pull metadata from frontmatter ───────────────
+let Content: ((_props: Record<string, unknown>) => unknown) | null = null;
+
+const article = entry
+  ? {
+      title:       entry.data.title,
+      subtitle:    entry.data.subtitle,
+      category:    entry.data.category,
+      date:        entry.data.date,
+      readingTime: entry.data.readingTime,
+      author:      entry.data.author,
+      tags:        entry.data.tags,
+    }
+  : {
+      // ── Legacy hardcoded data ───────────────────────────────────────────────
+      title:       'Building AI-Native Internal Tools with RAG and PostgreSQL',
+      subtitle:    'How we replaced a brittle rules engine with a retrieval-augmented generation pipeline — reducing classification latency by 60% and making routing decisions fully auditable by non-engineers.',
+      category:    'AI / ML',
+      date:        'May 10, 2026',
+      readingTime: '12 min read',
+      author:      { name: 'Naveen', initials: 'N' },
+      tags:        ['AI', 'RAG', 'PostgreSQL', 'Docker', 'Python', 'Embeddings', 'LLM'],
+    };
+
+if (entry) {
+  const rendered = await render(entry);
+  Content = rendered.Content;
+}
+
+const toc = entry?.data.toc ?? [
   { id: 'background',          label: 'Background',            level: 2 },
   { id: 'the-problem',         label: 'The Problem',           level: 2 },
   { id: 'architecture',        label: 'Architecture Overview', level: 2 },
@@ -33,7 +64,34 @@ const toc = [
   { id: 'lessons',             label: 'Lessons Learned',       level: 2 },
 ];
 
-// ── Code block content (defined here so Astro doesn't parse {} as expressions)
+const prevPost = entry?.data.prev ?? { slug: 'postgres-query-planning', title: 'PostgreSQL Query Planning Demystified' };
+const nextPost = entry?.data.next ?? { slug: 'fine-tuning-llms',        title: 'Fine-Tuning LLMs for Domain-Specific Tasks' };
+
+const relatedArticles = entry?.data.related ?? [
+  {
+    title:       'Fine-Tuning LLMs for Domain-Specific Tasks',
+    description: 'Practical walkthrough of fine-tuning open-source models on proprietary datasets using LoRA adapters.',
+    readingTime: '12 min',
+    category:    'AI / ML',
+    href:        '/write-ups/fine-tuning-llms',
+  },
+  {
+    title:       'PostgreSQL Query Planning Demystified',
+    description: 'Reading EXPLAIN ANALYZE output and applying partial indexes to cut query latency at scale.',
+    readingTime: '9 min',
+    category:    'Backend',
+    href:        '/write-ups/postgres-query-planning',
+  },
+  {
+    title:       'Collaborative Filtering at Scale',
+    description: 'Building a production-grade recommender using psychographic preference vectors.',
+    readingTime: '11 min',
+    category:    'AI / ML',
+    href:        '/write-ups/collaborative-filtering',
+  },
+];
+
+// ── Code block content (only used by the legacy inline post) ─────────────────
 const codeEmbed = `from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer("bge-small-en-v1.5-finetuned")
@@ -42,30 +100,6 @@ def embed_ticket(ticket: dict) -> list[float]:
     text = f"{ticket['subject']} {ticket['body']}"
     normalized = text.lower().strip()
     return model.encode(normalized, normalize_embeddings=True).tolist()`;
-
-const relatedArticles = [
-  {
-    title:       'Fine-Tuning LLMs for Domain-Specific Tasks',
-    description: 'Practical walkthrough of fine-tuning open-source models on proprietary datasets using LoRA adapters.',
-    readingTime: '12 min',
-    category:    'AI / ML',
-    href:        '/articles/fine-tuning-llms',
-  },
-  {
-    title:       'PostgreSQL Query Planning Demystified',
-    description: 'Reading EXPLAIN ANALYZE output and applying partial indexes to cut query latency at scale.',
-    readingTime: '9 min',
-    category:    'Backend',
-    href:        '/articles/postgres-query-planning',
-  },
-  {
-    title:       'Collaborative Filtering at Scale',
-    description: 'Building a production-grade recommender using psychographic preference vectors.',
-    readingTime: '11 min',
-    category:    'AI / ML',
-    href:        '/articles/collaborative-filtering',
-  },
-];
 ---
 
 <Layout>
@@ -73,17 +107,17 @@ const relatedArticles = [
     <Navbar />
 
     <!-- ── ARTICLE HEADER ─────────────────────────────────────────────────── -->
-    <header class="border-b border-slate-100">
+    <header class="border-b border-slate-100 dark:border-slate-800">
       <div class="max-w-7xl mx-auto px-8 lg:px-14 pt-7 pb-8">
 
 
         <!-- Breadcrumb -->
         <nav class="flex items-center gap-1.5 text-xs text-secondary mb-5" aria-label="Breadcrumb">
           <a href="/" class="hover:text-accent transition-colors no-underline">Home</a>
-          <Icon name="lucide:chevron-right" class="size-3 text-slate-300 shrink-0" />
-          <a href="/articles" class="hover:text-accent transition-colors no-underline">Articles</a>
-          <Icon name="lucide:chevron-right" class="size-3 text-slate-300 shrink-0" />
-          <span class="text-slate-400 truncate">Building AI-Native Internal Tools</span>
+          <Icon name="lucide:chevron-right" class="size-3 text-slate-300 dark:text-slate-600 shrink-0" />
+          <a href="/write-ups" class="hover:text-accent transition-colors no-underline">Write ups</a>
+          <Icon name="lucide:chevron-right" class="size-3 text-slate-300 dark:text-slate-600 shrink-0" />
+          <span class="text-slate-400 dark:text-slate-500 truncate">Building AI-Native Internal Tools</span>
         </nav>
 
         <!-- Category badge -->
@@ -94,7 +128,7 @@ const relatedArticles = [
         </div>
 
         <!-- Title -->
-        <h1 class="text-[1.875rem] sm:text-[2.25rem] font-bold text-slate-900 leading-[1.2] max-w-[760px] m-0 mb-4 tracking-tight">
+        <h1 class="text-[1.875rem] sm:text-[2.25rem] font-bold text-slate-900 dark:text-slate-100 leading-[1.2] max-w-[760px] m-0 mb-4 tracking-tight">
           {article.title}
         </h1>
 
@@ -112,11 +146,11 @@ const relatedArticles = [
               {article.author.initials}
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center sm:gap-0">
-              <span class="font-semibold text-slate-900 text-sm">{article.author.name}</span>
+              <span class="font-semibold text-slate-900 dark:text-slate-100 text-sm">{article.author.name}</span>
               <div class="flex items-center gap-2.5 text-xs text-secondary sm:ml-3">
-                <span class="hidden sm:inline text-slate-200">&middot;</span>
+                <span class="hidden sm:inline text-slate-200 dark:text-slate-700">&middot;</span>
                 <time datetime="2026-05-10">{article.date}</time>
-                <span class="text-slate-200">&middot;</span>
+                <span class="text-slate-200 dark:text-slate-700">&middot;</span>
                 <span>{article.readingTime}</span>
               </div>
             </div>
@@ -125,13 +159,13 @@ const relatedArticles = [
           <!-- Right: share actions -->
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-secondary mr-1.5 hidden sm:inline">Share</span>
-            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 hover:border-accent/40 transition-colors" aria-label="Share on Twitter/X">
+            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="Share on Twitter/X">
               <Icon name="lucide:twitter" class="size-3.5" />
             </a>
-            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 hover:border-accent/40 transition-colors" aria-label="Share on LinkedIn">
+            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="Share on LinkedIn">
               <Icon name="lucide:linkedin" class="size-3.5" />
             </a>
-            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 hover:border-accent/40 transition-colors" aria-label="View on GitHub">
+            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="View on GitHub">
               <Icon name="lucide:github" class="size-3.5" />
             </a>
           </div>
@@ -146,7 +180,14 @@ const relatedArticles = [
 
         <!-- ── LEFT: ARTICLE BODY ──────────────────────────────────────────── -->
         <main class="min-w-0">
-          <article class="max-w-[760px] text-[0.9375rem] leading-[1.8] text-slate-600">
+          {Content ? (
+            /* ── MDX post body ──────────────────────────────────────────── */
+            <article class="prose-writeup max-w-[760px]">
+              <Content />
+            </article>
+          ) : (
+            /* ── Legacy inline post body ────────────────────────────────── */
+            <article class="prose-writeup max-w-[760px]">
 
             <h2 id="background" class="text-[1.3125rem] font-bold text-slate-900 mt-0 mb-3 leading-[1.3] tracking-[-0.015em] scroll-mt-6">Background</h2>
             <p class="mb-5 leading-[1.8] text-slate-600">
@@ -365,26 +406,31 @@ LIMIT 5;</code></pre>
             </p>
 
           </article>
+          )}
 
           <!-- ── PREV / NEXT NAVIGATION ──────────────────────────────────── -->
-          <nav class="max-w-[760px] mt-14 pt-8 border-t border-slate-100" aria-label="Article navigation">
+          <nav class="max-w-[760px] mt-14 pt-8 border-t border-slate-100" aria-label="Write-up navigation">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <a href="/articles/postgres-query-planning" class="group flex flex-col gap-1.5 p-4 border border-slate-200 no-underline transition-colors hover:border-accent/40">
-                <span class="flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-[0.06em] font-medium text-slate-400 transition-colors group-hover:text-accent">
-                  <Icon name="lucide:arrow-left" class="size-3 shrink-0" />
-                  Previous
-                </span>
-                <span class="text-sm font-semibold text-slate-800 leading-[1.4] transition-colors group-hover:text-accent">PostgreSQL Query Planning Demystified</span>
-              </a>
-              <a href="/articles/fine-tuning-llms" class="group flex flex-col gap-1.5 p-4 border border-slate-200 no-underline transition-colors hover:border-accent/40">
-                <span class="flex items-center justify-end gap-1.5 text-[0.6875rem] uppercase tracking-[0.06em] font-medium text-slate-400 transition-colors group-hover:text-accent">
-                  Next
-                  <Icon name="lucide:arrow-right" class="size-3 shrink-0" />
-                </span>
-                <span class="text-sm font-semibold text-slate-800 leading-[1.4] text-right transition-colors group-hover:text-accent">
-                  Fine-Tuning LLMs for Domain-Specific Tasks
-                </span>
-              </a>
+              {prevPost && (
+                <a href={`/write-ups/${prevPost.slug}`} class="group flex flex-col gap-1.5 p-4 border border-slate-200 no-underline transition-colors hover:border-accent/40">
+                  <span class="flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-[0.06em] font-medium text-slate-400 transition-colors group-hover:text-accent">
+                    <Icon name="lucide:arrow-left" class="size-3 shrink-0" />
+                    Previous
+                  </span>
+                  <span class="text-sm font-semibold text-slate-800 leading-[1.4] transition-colors group-hover:text-accent">{prevPost.title}</span>
+                </a>
+              )}
+              {nextPost && (
+                <a href={`/write-ups/${nextPost.slug}`} class="group flex flex-col gap-1.5 p-4 border border-slate-200 no-underline transition-colors hover:border-accent/40">
+                  <span class="flex items-center justify-end gap-1.5 text-[0.6875rem] uppercase tracking-[0.06em] font-medium text-slate-400 transition-colors group-hover:text-accent">
+                    Next
+                    <Icon name="lucide:arrow-right" class="size-3 shrink-0" />
+                  </span>
+                  <span class="text-sm font-semibold text-slate-800 leading-[1.4] text-right transition-colors group-hover:text-accent">
+                    {nextPost.title}
+                  </span>
+                </a>
+              )}
             </div>
           </nav>
         </main>
@@ -441,7 +487,7 @@ LIMIT 5;</code></pre>
 
             <!-- Related Articles -->
             <div>
-              <h2 class="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-slate-400 m-0 mb-3.5">Related Articles</h2>
+              <h2 class="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-slate-400 m-0 mb-3.5">Related Write-ups</h2>
               <ul class="list-none m-0 p-0">
                 {relatedArticles.map(rel => (
                   <li class="border-b border-slate-100 last:border-b-0">

@@ -2,22 +2,22 @@
 import { Icon } from 'astro-icon/components';
 ---
 
-<nav class="px-8 lg:px-14 flex items-center justify-between gap-4 py-3 border-b border-slate-100" aria-label="Primary">
+<nav class="px-8 lg:px-14 flex items-center justify-between gap-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-page" aria-label="Primary">
   <!-- Logo -->
   <a href="/" class="flex items-center gap-2 no-underline" aria-label="Naveen home">
     <span class="w-8 h-8 bg-accent grid place-items-center text-white font-bold text-sm select-none">N</span>
-    <span class="font-bold tracking-wide text-slate-900">Naveen</span>
+    <span class="font-bold tracking-wide text-slate-900 dark:text-slate-100">Naveen</span>
   </a>
 
   <!-- Nav links (desktop) -->
   <ul class="hidden md:flex gap-5 list-none m-0 p-0">
-    <li><a href="#about"    class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">About</a></li>
-    <li><a href="#projects" class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Projects</a></li>
-    <li><a href="#reading"  class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Reading</a></li>
-    <li><a href="/articles" class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Articles</a></li>
+    <li><a href="#about"    class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">About</a></li>
+    <li><a href="#projects" class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Projects</a></li>
+    <li><a href="#reading"  class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Reading</a></li>
+    <li><a href="/write-ups" class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Write ups</a></li>
   </ul>
 
-  <!-- Right side: CTA (desktop) + hamburger (mobile) -->
+  <!-- Right side: CTA + theme toggle (desktop) + hamburger (mobile) -->
   <div class="flex items-center gap-3">
     <a href="mailto:naveen@example.com"
        class="hidden md:inline-flex uppercase bg-accent items-center gap-1.5 border border-slate-200 px-4 py-2 text-white font-semibold text-sm hover:border-accent hover:text-white transition-colors no-underline">
@@ -25,10 +25,22 @@ import { Icon } from 'astro-icon/components';
       Contact me
     </a>
 
+    <!-- Theme toggle button -->
+    <button
+      id="theme-toggle"
+      class="p-1.5 text-slate-600 dark:text-slate-400 hover:text-accent dark:hover:text-accent transition-colors"
+      aria-label="Toggle color theme"
+    >
+      <!-- Moon: shown in light mode -->
+      <Icon name="lucide:moon" class="size-4 dark:hidden" />
+      <!-- Sun: shown in dark mode -->
+      <Icon name="lucide:sun" class="size-4 hidden dark:block" />
+    </button>
+
     <!-- Hamburger button (mobile only) -->
     <button
       id="nav-toggle"
-      class="md:hidden p-1.5 text-slate-700 hover:text-accent transition-colors"
+      class="md:hidden p-1.5 text-slate-700 dark:text-slate-300 hover:text-accent transition-colors"
       aria-label="Toggle navigation menu"
       aria-expanded="false"
       aria-controls="nav-menu"
@@ -40,16 +52,24 @@ import { Icon } from 'astro-icon/components';
 </nav>
 
 <!-- Mobile dropdown menu -->
-<div id="nav-menu" class="hidden md:hidden border-b border-slate-100 bg-white px-8 py-5">
+<div id="nav-menu" class="hidden md:hidden border-b border-slate-100 dark:border-slate-800 bg-page px-8 py-5">
   <ul class="flex flex-col gap-5 list-none m-0 p-0">
-    <li><a href="#about"    class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">About</a></li>
-    <li><a href="#projects" class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Projects</a></li>
-    <li><a href="#reading"  class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Reading</a></li>
-    <li><a href="/articles" class="text-gray-800 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Articles</a></li>
+    <li><a href="#about"    class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">About</a></li>
+    <li><a href="#projects" class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Projects</a></li>
+    <li><a href="#reading"  class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Reading</a></li>
+    <li><a href="/write-ups" class="text-gray-800 dark:text-slate-300 uppercase font-bold hover:text-accent transition-colors text-sm no-underline">Write ups</a></li>
   </ul>
 </div>
 
 <script>
+  // ── Theme toggle ─────────────────────────────────────────────────────────
+  const themeToggle = document.getElementById('theme-toggle');
+  themeToggle?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+
+  // ── Mobile nav toggle ────────────────────────────────────────────────────
   const toggle = document.getElementById('nav-toggle') as HTMLButtonElement;
   const menu = document.getElementById('nav-menu');
   const iconMenu = document.getElementById('icon-menu');

@@ -28,9 +28,9 @@ interface Props {
 const { icon, title, date, description, tags } = Astro.props;
 ---
 
-<article class="border-b border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 hover:-translate-y-0.5 transition-transform cursor-pointer">
+<article class="border-b border-slate-200 dark:border-[#24324A] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 hover:-translate-y-0.5 hover:bg-slate-50 dark:hover:bg-[#172033] transition-all cursor-pointer">
   <!-- Project icon box -->
-  <div class="shrink-0 size-10 sm:size-16 bg-accent border border-blue-200 flex items-center justify-center">
+  <div class="shrink-0 size-10 sm:size-16 bg-accent border border-blue-200 dark:border-[#24324A] flex items-center justify-center">
     <Icon name={icon} class="size-5 sm:size-8 text-white" />
   </div>
 
@@ -38,7 +38,7 @@ const { icon, title, date, description, tags } = Astro.props;
   <div class="flex flex-col gap-2 flex-1 min-w-0">
     <!-- Title + Date -->
     <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-      <h3 class="font-bold text-slate-900 m-0 text-base leading-snug">{title}</h3>
+      <h3 class="font-bold text-slate-900 dark:text-[#F3F7FF] m-0 text-base leading-snug">{title}</h3>
       <span class="self-start md:border border-accent/40 uppercase lg:px-2.5 py-0.5 text-[10px] text-accent font-semibold whitespace-nowrap">{date}</span>
     </div>
 
@@ -47,7 +47,7 @@ const { icon, title, date, description, tags } = Astro.props;
     <!-- Tech tags with small icons -->
     <div class="flex flex-wrap gap-1.5 mt-auto pt-1">
       {tags.map((tag) => (
-        <span class="inline-flex items-center gap-1 border border-slate-200 px-2 py-0.5 text-xs text-accent font-medium">
+        <span class="inline-flex items-center gap-1 border border-slate-200 dark:border-[#24324A] px-2 py-0.5 text-xs text-accent font-medium">
           <Icon name={techIconMap[tag] ?? 'lucide:code-2'} class="size-3 shrink-0" />
           {tag}
         </span>

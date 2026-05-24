@@ -6,7 +6,7 @@ import ArticleItem from '../components/ArticleItem.astro';
 import { Icon } from 'astro-icon/components';
 
 const categories = [
-  { name: 'All Articles',          count: 11 },
+  { name: 'All Write ups',         count: 11 },
   { name: 'Backend Development',   count: 4  },
   { name: 'AI / Machine Learning', count: 3  },
   { name: 'DevOps / Systems',      count: 2  },
@@ -117,11 +117,11 @@ const articles = [
     <Navbar />
 
     <!-- ─── Hero ─────────────────────────────────────────────────────────── -->
-    <div class="px-4 sm:px-8 lg:px-14 py-10 lg:py-14 border-b border-slate-100">
+    <div class="px-4 sm:px-8 lg:px-14 py-10 lg:py-14 border-b border-slate-100 dark:border-[#1B263B]">
       <div class="max-w-2xl">
         <p class="text-accent text-xs uppercase tracking-widest font-semibold m-0 mb-3">Writing</p>
-        <h1 class="text-4xl lg:text-5xl font-bold text-slate-900 m-0 mb-4 leading-tight">
-          All Articles
+        <h1 class="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-[#F3F7FF] m-0 mb-4 leading-tight">
+          All Write ups
         </h1>
         <p class="text-secondary text-base lg:text-lg m-0 leading-relaxed">
           Thoughts on backend engineering, distributed systems, machine learning,
@@ -140,7 +140,7 @@ const articles = [
           <!-- Mobile filter toggle (hidden on lg) -->
           <button
             id="filter-toggle"
-            class="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-slate-200 text-sm font-semibold text-slate-900 hover:border-accent transition-colors mb-4"
+            class="lg:hidden w-full flex items-center justify-between px-4 py-3 border border-slate-200 dark:border-[#24324A] text-sm font-semibold text-slate-900 dark:text-[#F3F7FF] hover:border-accent dark:bg-[#111827] transition-colors mb-4"
             aria-expanded="false"
             aria-controls="filter-panel"
           >
@@ -159,7 +159,7 @@ const articles = [
               <p class="text-xs uppercase tracking-widest font-semibold text-secondary m-0 mb-3">
                 Categories
               </p>
-              <nav aria-label="Article categories">
+              <nav aria-label="Write-up categories">
                 <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
                   {categories.map((cat, i) => (
                     <li>
@@ -171,6 +171,7 @@ const articles = [
                             : 'pl-4 border-transparent text-slate-700 hover:text-accent hover:bg-slate-50',
                         ].join(' ')}
                         data-category-btn
+                        data-active={i === 0 ? 'true' : 'false'}
                         data-category={cat.name}
                       >
                         <span>{cat.name}</span>
@@ -194,7 +195,7 @@ const articles = [
               </p>
               <div class="flex flex-wrap gap-1.5">
                 {tags.map((tag) => (
-                  <span class="border border-slate-200 px-2.5 py-1 text-xs text-slate-600 hover:border-accent hover:text-accent transition-colors cursor-pointer">
+                  <span class="border border-slate-200 dark:border-[#24324A] px-2.5 py-1 text-xs text-slate-600 dark:text-[#B7C4D8] hover:border-accent hover:text-accent dark:hover:border-accent dark:hover:text-accent transition-colors cursor-pointer">
                     {tag}
                   </span>
                 ))}
@@ -208,7 +209,7 @@ const articles = [
         <div class="flex-1 min-w-0 mt-6 lg:mt-0">
 
           <!-- Filter bar -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-200 mb-1">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-200 dark:border-[#24324A] mb-1">
             <!-- Left: sort + count -->
             <div class="flex items-center gap-3">
               <label for="sort-select" class="text-xs uppercase tracking-widest font-semibold text-secondary whitespace-nowrap">
@@ -217,7 +218,7 @@ const articles = [
               <div class="relative">
                 <select
                   id="sort-select"
-                  class="appearance-none border border-slate-200 text-sm text-slate-900 px-3 py-1.5 pr-7 bg-white hover:border-accent transition-colors cursor-pointer focus:outline-none focus:border-accent"
+                  class="appearance-none border border-slate-200 dark:border-[#24324A] text-sm text-slate-900 dark:text-[#F3F7FF] px-3 py-1.5 pr-7 bg-white dark:bg-[#111827] hover:border-accent transition-colors cursor-pointer focus:outline-none focus:border-accent"
                 >
                   <option value="latest">Latest</option>
                   <option value="oldest">Oldest</option>
@@ -229,7 +230,7 @@ const articles = [
                 />
               </div>
               <span id="article-count" class="text-xs text-secondary tabular-nums">
-                {articles.length} articles
+                {articles.length} write-ups
               </span>
             </div>
 
@@ -242,8 +243,8 @@ const articles = [
               <input
                 id="search-input"
                 type="search"
-                placeholder="Search articles…"
-                class="border border-slate-200 text-sm text-slate-900 pl-8 pr-4 py-1.5 w-full sm:w-56 focus:outline-none focus:border-accent hover:border-accent transition-colors placeholder:text-slate-400 bg-white"
+                placeholder="Search write-ups…"
+                class="border border-slate-200 dark:border-[#24324A] text-sm text-slate-900 dark:text-[#F3F7FF] pl-8 pr-4 py-1.5 w-full sm:w-56 focus:outline-none focus:border-accent hover:border-accent transition-colors placeholder:text-slate-400 dark:placeholder:text-[#6F819B] bg-white dark:bg-[#111827]"
               />
             </div>
           </div>
@@ -252,7 +253,7 @@ const articles = [
           <div id="article-list">
             {articles.map((article) => (
               <ArticleItem
-                href={`/articles/${article.slug}`}
+                href={`/write-ups/${article.slug}`}
                 title={article.title}
                 excerpt={article.excerpt}
                 date={article.date}
@@ -264,7 +265,7 @@ const articles = [
             <!-- Empty state -->
             <div id="empty-state" class="hidden py-16 text-center">
               <Icon name="lucide:file-search" class="size-10 text-secondary mx-auto mb-3" />
-              <p class="text-secondary text-sm m-0">No articles match your search.</p>
+              <p class="text-secondary text-sm m-0">No write-ups match your search.</p>
             </div>
           </div>
 
@@ -295,7 +296,7 @@ const articles = [
   const emptyState  = document.getElementById('empty-state');
   const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
 
-  let activeCategory = 'All Articles';
+  let activeCategory = 'All Write ups';
   let searchQuery    = '';
 
   function applyFilters() {
@@ -303,22 +304,24 @@ const articles = [
     articleEls.forEach((el) => {
       const titleMatch    = !searchQuery || (el.dataset.title   ?? '').includes(searchQuery);
       const excerptMatch  = !searchQuery || (el.dataset.excerpt ?? '').includes(searchQuery);
-      const categoryMatch = activeCategory === 'All Articles' || el.dataset.category === activeCategory;
+      const categoryMatch = activeCategory === 'All Write ups' || el.dataset.category === activeCategory;
       const show = (titleMatch || excerptMatch) && categoryMatch;
       el.style.display = show ? '' : 'none';
       if (show) visible++;
     });
-    if (countEl)    countEl.textContent = `${visible} article${visible !== 1 ? 's' : ''}`;
+    if (countEl) countEl.textContent = `${visible} write-up${visible !== 1 ? 's' : ''}`;
     if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
   }
 
   // ── Category buttons ─────────────────────────────────────────────────────
   document.querySelectorAll<HTMLElement>('[data-category-btn]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      activeCategory = btn.dataset.category ?? 'All Articles';
+      activeCategory = btn.dataset.category ?? 'All Write ups';
 
       document.querySelectorAll<HTMLElement>('[data-category-btn]').forEach((b) => {
         const active = b.dataset.category === activeCategory;
+        // Update data-active for CSS-driven dark mode targeting
+        b.dataset.active = String(active);
         b.className = [
           'w-full flex items-center justify-between py-2 pr-3 text-sm transition-colors text-left border-l-2',
           active
