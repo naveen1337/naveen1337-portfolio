@@ -416,6 +416,14 @@ const { pageSize } = config.pagination;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // ── URL category pre-filter ───────────────────────────────────────────────
+  const urlCategory = new URLSearchParams(window.location.search).get('category');
+  if (urlCategory) {
+    const matchBtn = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-category-btn]'))
+      .find(b => b.dataset.category === urlCategory);
+    if (matchBtn) matchBtn.click();
+  }
+
   // ── Initial render ────────────────────────────────────────────────────────
   renderPage();
 </script>

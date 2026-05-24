@@ -66,6 +66,10 @@ const relatedArticles = relatedPosts.map(p => ({
   category:    p.data.category,
   href:        `/write-ups/${p.id}`,
 }));
+
+const pageUrl        = Astro.url.href;
+const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(pageUrl)}`;
+const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`;
 ---
 
 <Layout>
@@ -74,7 +78,7 @@ const relatedArticles = relatedPosts.map(p => ({
 
     <!-- ── ARTICLE HEADER ─────────────────────────────────────────────────── -->
     <header class="border-b border-slate-100 dark:border-slate-800">
-      <div class="max-w-7xl mx-auto px-8 lg:px-14 pt-7 pb-8">
+      <div class="max-w-7xl mx-auto px-4 lg:px-14 pt-7 pb-8">
 
 
         <!-- Breadcrumb -->
@@ -82,8 +86,8 @@ const relatedArticles = relatedPosts.map(p => ({
           <a href="/" class="hover:text-accent transition-colors no-underline">Home</a>
           <Icon name="lucide:chevron-right" class="size-3 text-slate-300 dark:text-slate-600 shrink-0" />
           <a href="/write-ups" class="hover:text-accent transition-colors no-underline">Write ups</a>
-          <Icon name="lucide:chevron-right" class="size-3 text-slate-300 dark:text-slate-600 shrink-0" />
-          <span class="text-slate-400 dark:text-slate-500 truncate">{article.title}</span>
+          <Icon name="lucide:chevron-right" class="hidden md:block  size-3 text-slate-300 dark:text-slate-600 shrink-0" />
+          <span class="hidden md:block text-slate-400 dark:text-slate-500 truncate">{article.title}</span>
         </nav>
 
         <!-- Category badge -->
@@ -125,14 +129,11 @@ const relatedArticles = relatedPosts.map(p => ({
           <!-- Right: share actions -->
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-secondary mr-1.5 hidden sm:inline">Share</span>
-            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="Share on Twitter/X">
+            <a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="Share on Twitter/X">
               <Icon name="lucide:twitter" class="size-3.5" />
             </a>
-            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="Share on LinkedIn">
+            <a href={linkedinShareUrl} target="_blank" rel="noopener noreferrer" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="Share on LinkedIn">
               <Icon name="lucide:linkedin" class="size-3.5" />
-            </a>
-            <a href="#" class="p-2 text-secondary hover:text-accent border border-slate-200 dark:border-slate-700 hover:border-accent/40 transition-colors" aria-label="View on GitHub">
-              <Icon name="lucide:github" class="size-3.5" />
             </a>
           </div>
 
@@ -141,7 +142,7 @@ const relatedArticles = relatedPosts.map(p => ({
     </header>
 
     <!-- ── TWO-COLUMN CONTENT AREA ─────────────────────────────────────────── -->
-    <div class="max-w-7xl mx-auto px-8 lg:px-14 pt-10">
+    <div class="max-w-7xl mx-auto px-4 lg:px-14 pt-6 lg:pt-10">
       <div class="grid grid-cols-1 xl:grid-cols-[1fr_296px] gap-12 xl:gap-14 items-start">
 
         <!-- ── LEFT: ARTICLE BODY ──────────────────────────────────────────── -->
@@ -212,18 +213,18 @@ const relatedArticles = relatedPosts.map(p => ({
             <div class="pb-[1.375rem] mb-[1.375rem] border-b border-slate-100">
               <h2 class="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-slate-400 m-0 mb-3.5">Share</h2>
               <div class="flex gap-2 flex-wrap">
-                <a href="#" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-slate-500 border border-slate-200 no-underline transition-colors hover:text-accent hover:border-accent/40" aria-label="Share on Twitter/X">
+                <a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-slate-500 border border-slate-200 no-underline transition-colors hover:text-accent hover:border-accent/40" aria-label="Share on Twitter/X">
                   <Icon name="lucide:twitter" class="size-3" />
                   <span>Twitter</span>
                 </a>
-                <a href="#" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-slate-500 border border-slate-200 no-underline transition-colors hover:text-accent hover:border-accent/40" aria-label="Share on LinkedIn">
+                <a href={linkedinShareUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-slate-500 border border-slate-200 no-underline transition-colors hover:text-accent hover:border-accent/40" aria-label="Share on LinkedIn">
                   <Icon name="lucide:linkedin" class="size-3" />
                   <span>LinkedIn</span>
                 </a>
-                <a href="#" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-slate-500 border border-slate-200 no-underline transition-colors hover:text-accent hover:border-accent/40" aria-label="View on GitHub">
-                  <Icon name="lucide:github" class="size-3" />
-                  <span>GitHub</span>
-                </a>
+                <button data-copy-url class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-slate-500 border border-slate-200 transition-colors hover:text-accent hover:border-accent/40 cursor-pointer" aria-label="Copy link">
+                  <Icon name="lucide:link" class="size-3" />
+                  <span data-copy-url-label>Copy link</span>
+                </button>
               </div>
             </div>
 

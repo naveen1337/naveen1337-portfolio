@@ -2,12 +2,13 @@
   "categories": [
     "Software Engineering",
     "Personal Projects",
+    "Reading List",
     "Finance",
     "General",
     "Entertainment"
   ],
   "tags": ["AI/ML", "Economy", "Database", "Infrastructure"],
   "pagination": {
-    "pageSize": 5
+    "pageSize": 10
   }
 }
