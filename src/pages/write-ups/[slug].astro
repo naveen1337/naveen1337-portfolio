@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import { Icon } from 'astro-icon/components';
 import { getCollection, render } from 'astro:content';
+import { generateArticleSchema, generateBreadcrumbSchema } from '../../lib/schema';
 
 export async function getStaticPaths() {
   function parseDateStr(d: string): number {
@@ -54,6 +55,7 @@ const article = {
   readingTime: entry.data.readingTime,
   author:      entry.data.author,
   tags:        entry.data.tags,
+  excerpt:     entry.data.excerpt,
 };
 
 const prevPost = prevEntry ? { slug: prevEntry.id, title: prevEntry.data.title } : null;
@@ -67,15 +69,37 @@ const relatedArticles = relatedPosts.map(p => ({
   href:        `/write-ups/${p.id}`,
 }));
 
+// SEO Meta Tags
+const pageTitle = `${article.title} | Naveen — Full-Stack Developer`;
+const pageDescription = article.excerpt || article.subtitle || 'Read this article on software engineering, technology, and personal projects.';
+const pageKeywords = [...article.tags, article.category, 'full stack developer', 'Tamil Nadu', 'India'].join(', ');
+
 // Prefer configured site base (Astro.site) for canonical share URLs,
 // fallback to the current request URL (useful in local dev).
-const pageUrlBase = Astro.site ? Astro.site.replace(/\/$/, '') : Astro.url.origin;
+const pageUrlBase = Astro.site ? Astro.site.toString().replace(/\/$/, '') : Astro.url.origin;
 const pageUrl = `${pageUrlBase}${Astro.url.pathname}${Astro.url.search ?? ''}`;
 const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(pageUrl)}`;
 const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`;
+
+// JSON-LD Schemas
+const articleSchema = generateArticleSchema({
+  title: article.title,
+  description: pageDescription,
+  datePublished: article.date,
+  author: article.author?.name || 'Naveen',
+  url: pageUrl,
+});
+
+const breadcrumbSchema = generateBreadcrumbSchema({
+  items: [
+    { name: 'Home', url: pageUrlBase, position: 1 },
+    { name: 'Write-ups', url: `${pageUrlBase}/write-ups`, position: 2 },
+    { name: article.title, url: pageUrl, position: 3 },
+  ],
+});
 ---
 
-<Layout>
+<Layout title={pageTitle} description={pageDescription} keywords={pageKeywords}>
   <div class="min-h-screen pb-24">
     <Navbar />
 
@@ -257,6 +281,10 @@ const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${
   </div>
 
   <Footer />
+
+  <!-- JSON-LD Schemas for SEO -->
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
 </Layout>
 
 <script>

@@ -1,5 +1,19 @@
 ---
 import '../styles/global.css'
+
+interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  ogImage?: string;
+}
+
+const { 
+  title = 'Naveen — Full-Stack Developer', 
+  description = 'Full-Stack Developer from Tamil Nadu, India. Specializing in modern web technologies, cloud infrastructure, and scalable application development.',
+  keywords = 'full stack developer, Tamil Nadu, India, web development, software engineering, cloud infrastructure, Node.js, React, TypeScript',
+  ogImage = 'https://naveen37.com/og-image.png'
+} = Astro.props as Props;
 ---
 <!doctype html>
 <html lang="en" class="bg-page">
@@ -22,7 +36,41 @@ import '../styles/global.css'
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Naveen — Full-Stack Developer</title>
+		
+		<!-- Primary Meta Tags -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<meta name="keywords" content={keywords} />
+		<meta name="author" content="Naveen" />
+		<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+		<meta name="language" content="English" />
+		<meta name="revisit-after" content="7 days" />
+		<meta name="googlebot" content="index, follow" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={Astro.url} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:site_name" content="Naveen — Full-Stack Developer" />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:type" content="image/png" />
+		
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={Astro.url} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta property="twitter:image" content={ogImage} />
+		
+		<!-- Canonical URL -->
+		<link rel="canonical" href={Astro.url} />
+		
+		<!-- Umami Analytics -->
+		<script defer src="https://cloud.umami.is/script.js" data-website-id="8527adda-ec3e-4e25-817b-ca018fd29865"></script>
 	</head>
 	<body class="min-h-screen text-slate-900 dark:text-slate-100 font-sans bg-page dark:bg-page">
 		<slot />

@@ -1,0 +1,28 @@
+# https://www.robotstxt.org/
+# Allow all crawlers to index the website
+
+# Default rules for all crawlers
+User-agent: *
+Allow: /
+Disallow: 
+
+# Specific rules for Googlebot (more aggressive crawling)
+User-agent: Googlebot
+Allow: /
+Disallow: 
+
+# Specific rules for Bingbot
+User-agent: Bingbot
+Allow: /
+Disallow: 
+
+# Specify the sitemap location
+Sitemap: https://naveen37.com/sitemap-index.xml
+
+# Crawl delay (optional - time in seconds between requests)
+Crawl-delay: 1
+
+# Request rate (optional - pages per 10 seconds)
+Request-rate: 10/10s
+
+# Comment: Allow all standard crawlers and respectfully request not to crawl too aggressively

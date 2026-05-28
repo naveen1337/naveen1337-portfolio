@@ -1,8 +1,25 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import App from '../components/App.astro';
+import { generateAuthorSchema, generateWebsiteSchema } from '../lib/schema';
+
+// SEO Meta Tags for homepage
+const pageTitle = 'Naveen — Full-Stack Developer';
+const pageDescription = 'Full-Stack Developer based in Tamil Nadu, India. Specializing in modern web technologies, cloud infrastructure, and scalable application development. Node.js, React, TypeScript expertise.';
+const pageKeywords = 'full stack developer, Tamil Nadu, India, web development, software engineer, Node.js, React, TypeScript, cloud infrastructure';
+
+// JSON-LD Schemas
+const authorSchema = generateAuthorSchema();
+const websiteSchema = generateWebsiteSchema({
+  url: 'https://naveen37.com',
+  name: pageTitle,
+  description: pageDescription,
+});
 ---
 
-<Layout>
+<Layout title={pageTitle} description={pageDescription} keywords={pageKeywords}>
+	<!-- JSON-LD Schemas for SEO -->
+	<script type="application/ld+json" set:html={JSON.stringify(authorSchema)} />
+	<script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
 	<App />
 </Layout>

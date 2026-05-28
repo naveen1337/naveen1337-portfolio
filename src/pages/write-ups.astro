@@ -6,6 +6,7 @@ import ArticleItem from '../components/ArticleItem.astro';
 import { Icon } from 'astro-icon/components';
 import { getCollection } from 'astro:content';
 import config from '../data/write-ups.config.json';
+import { generateCollectionSchema } from '../lib/schema';
 
 // ── Load & sort posts ────────────────────────────────────────────────────────
 function parseDateStr(d: string): number {
@@ -48,9 +49,22 @@ const sidebarTags = config.tags
   .map(t => ({ name: t, count: tagCounts.get(t)! }));
 
 const { pageSize } = config.pagination;
+
+// SEO Meta Tags for write-ups page
+const pageTitle = 'All Write-ups | Naveen — Full-Stack Developer';
+const pageDescription = 'Explore write-ups on software engineering, cloud infrastructure, personal projects, reading lists, and technology insights from a full-stack developer in Tamil Nadu, India.';
+const pageKeywords = 'write-ups, articles, software engineering, technology, web development, cloud infrastructure, full stack developer, Tamil Nadu, India';
+
+// JSON-LD Schema for collection page
+const collectionSchema = generateCollectionSchema({
+  url: 'https://naveen37.com/write-ups',
+  name: pageTitle,
+  description: pageDescription,
+  itemCount: posts.length,
+});
 ---
 
-<Layout>
+<Layout title={pageTitle} description={pageDescription} keywords={pageKeywords}>
   <div class="min-h-screen pb-16">
     <Navbar />
 
@@ -241,6 +255,9 @@ const { pageSize } = config.pagination;
 
     <Footer />
   </div>
+
+  <!-- JSON-LD Schema for SEO -->
+  <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
 </Layout>
 
 <script>
